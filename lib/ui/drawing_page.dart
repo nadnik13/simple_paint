@@ -1,16 +1,24 @@
 import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:go_router/go_router.dart';
+import 'package:simple_paint/bloc/image_bloc.dart';
 import 'package:simple_paint/data/drawn_line.dart';
 import 'package:simple_paint/services/sketcher.dart';
 import 'package:simple_paint/ui/widgets/my_color_picker.dart';
 import 'package:simple_paint/ui/widgets/scaffold_with_background.dart';
 import 'package:simple_paint/ui/widgets/tool_bar.dart';
 
+import '../bloc/image_event.dart';
+
 class DrawingPage extends StatefulWidget {
-  const DrawingPage({super.key});
+  final String? imageId;
+  const DrawingPage({super.key, required this.imageId});
 
   @override
   _DrawingPageState createState() => _DrawingPageState();
@@ -37,24 +45,35 @@ class _DrawingPageState extends State<DrawingPage> {
   }
 
   Future<void> save() async {
+    print('save image');
     try {
-      // RenderRepaintBoundary boundary =
-      //     _globalKey.currentContext?.findRenderObject()
-      //         as RenderRepaintBoundary;
-      // ui.Image image = await boundary.toImage();
-      // final ByteData? byteData = await image.toByteData(
-      //   format: ui.ImageByteFormat.png,
-      // );
-      // Uint8List pngBytes = byteData.buffer.asUint8List();
-      // var saved = await ImageGallerySaver.saveImage(
-      //   pngBytes,
-      //   quality: 100,
-      //   name: DateTime.now().toIso8601String() + ".png",
-      //   isReturnImagePathOfIOS: true,
-      // );
+      RenderRepaintBoundary boundary =
+          _globalKey.currentContext?.findRenderObject()
+              as RenderRepaintBoundary;
+      print('get boundary ${boundary}');
+      ui.Image image = await boundary.toImage();
+      print('get image ${image}');
+      final ByteData byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png) as ByteData;
+      print('get byteData ${byteData}');
+      Uint8List? pngBytes = byteData.buffer.asUint8List();
+      print('get pngBytes ${pngBytes}');
+      final imageId = widget.imageId;
+      if (imageId != null) {
+        print('imageId != null');
+        context.read<ImageBloc>().add(
+          SaveOriginalImageEvent(imageId: imageId, originalBytes: pngBytes),
+        );
+      } else {
+        context.read<ImageBloc>().add(
+          CreateNewImageEvent(originalBytes: pngBytes, mime: 'image/png'),
+        );
+      }
+      print("saved: ${context.read<ImageBloc>().state}");
       print("saved");
+      context.go('/gallery');
     } catch (e) {
-      print(e);
+      print('Error: ${e}');
     }
   }
 
@@ -79,16 +98,17 @@ class _DrawingPageState extends State<DrawingPage> {
           },
           icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
         ),
-        title: Text('Новое изображение', style: TextStyle(color: Colors.white)),
-        actions: [
-          IconButton(
-            onPressed: () {
-              print('finish');
-              context.go('/gallery');
-            },
-            icon: Icon(Icons.check_outlined, color: Colors.white),
-          ),
-        ],
+        title:
+            widget.imageId == null
+                ? Text(
+                  'Новое изображение',
+                  style: TextStyle(color: Colors.white),
+                )
+                : Text(
+                  'изображение ${widget.imageId}',
+                  style: TextStyle(color: Colors.white),
+                ),
+        actions: [buildSaveButton()],
       ),
       child: Padding(
         padding: const EdgeInsets.all(21.0),
@@ -278,9 +298,7 @@ class _DrawingPageState extends State<DrawingPage> {
   Widget buildSaveButton() {
     return GestureDetector(
       onTap: save,
-      child: CircleAvatar(
-        child: Icon(Icons.save, size: 20.0, color: Colors.white),
-      ),
+      child: Icon(Icons.check_outlined, size: 20.0, color: Colors.white),
     );
   }
 
@@ -318,7 +336,7 @@ class _DrawingPageState extends State<DrawingPage> {
         color: color,
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.8),
+            color: color.withAlpha(204),
             offset: const Offset(1, 2),
             blurRadius: 5,
           ),

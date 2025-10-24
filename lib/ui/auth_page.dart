@@ -62,7 +62,7 @@ class _AuthPageState extends State<AuthPage> {
                 ScaffoldMessenger.of(
                   context,
                 ).showSnackBar(const SnackBar(content: Text('Успешный вход!')));
-                // Здесь можно добавить навигацию на главную страницу
+                context.go('/gallery');
               }
             },
             child: Padding(

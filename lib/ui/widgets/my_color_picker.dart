@@ -105,7 +105,7 @@ class _BubblePainter extends CustomPainter {
 
     // Тень
     if (elevation > 0) {
-      canvas.drawShadow(path, Colors.black.withOpacity(0.6), elevation, true);
+      canvas.drawShadow(path, Colors.black.withAlpha(153), elevation, true);
     }
     // Заливка
     final fill = Paint()..color = color;
