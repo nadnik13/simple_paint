@@ -1,17 +1,11 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:simple_paint/bloc/account_data_bloc.dart';
-import 'package:simple_paint/bloc/gallery_bloc.dart';
-import 'package:simple_paint/bloc/image_bloc.dart';
-import 'package:simple_paint/data/fire_image_repo.dart';
-import 'package:simple_paint/data/user_repo.dart';
 import 'package:simple_paint/ui/auth_page.dart';
 import 'package:simple_paint/ui/drawing_page.dart';
-import 'package:simple_paint/ui/gallery_page.dart';
 import 'package:simple_paint/ui/registration_page.dart';
 
 import 'firebase_options.dart';
