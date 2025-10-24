@@ -46,14 +46,12 @@ final GoRouter _router = GoRouter(
       builder: (context, state) => RegistrationPage(),
     ),
 
-    /// Авторизованная зона — через ShellRoute
     ShellRoute(
       builder: (context, state, child) {
         final user = FirebaseAuth.instance.currentUser!;
         final userRepo = UserRepo(user.uid);
         final imageRepo = FireImageRepo(FirebaseFirestore.instance);
 
-        // Здесь создаём "глобальные" провайдеры для всех авторизованных страниц
         return MultiBlocProvider(
           providers: [
             BlocProvider<GalleryBloc>(
