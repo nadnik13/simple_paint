@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:simple_paint/bloc/account_data_bloc.dart';
 import 'package:simple_paint/ui/auth_page.dart';
+import 'package:simple_paint/ui/drawing_page.dart';
 import 'package:simple_paint/ui/registration_page.dart';
 
 import 'firebase_options.dart';
@@ -18,7 +19,7 @@ Future<void> main() async {
 }
 
 final GoRouter _router = GoRouter(
-  initialLocation: '/auth',
+  initialLocation: '/draw',
   redirect: (context, state) {
     if (state.fullPath == '/') {
       return '/auth';
@@ -31,6 +32,7 @@ final GoRouter _router = GoRouter(
       path: '/registration',
       builder: (context, state) => RegistrationPage(),
     ),
+    GoRoute(path: '/draw', builder: (context, state) => DrawingPage()),
   ],
 );
 
