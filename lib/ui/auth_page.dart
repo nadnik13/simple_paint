@@ -6,6 +6,7 @@ import 'package:simple_paint/bloc/account_data_event.dart';
 import 'package:simple_paint/bloc/account_data_state.dart';
 import 'package:simple_paint/ui/widgets/custom_button.dart';
 import 'package:simple_paint/ui/widgets/custom_form_field.dart';
+import 'package:simple_paint/ui/widgets/press_start_2p_title.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -70,25 +71,30 @@ class _AuthPageState extends State<AuthPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const Text('Вход', textAlign: TextAlign.start),
-                      const SizedBox(height: 20),
-                      CustomFormField(
-                        label: 'e-mail',
-                        hintText: 'Введите электронную почту',
-                        controller: _emailController,
-                      ),
-                      CustomFormField(
-                        label: 'Пароль',
-                        hintText: 'Введите пароль',
-                        controller: _passwordController,
-                        obscureText: true,
-                      ),
-                    ],
+                  Expanded(
+                    child: Column(
+                      spacing: 20,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        PressStart2PTitle(text: 'Вход'),
+                        //SizedBox(height: 20),
+                        CustomFormField(
+                          label: 'e-mail',
+                          hintText: 'Введите электронную почту',
+                          controller: _emailController,
+                        ),
+                        //SizedBox(height: 20),
+                        CustomFormField(
+                          label: 'Подтверждение пароля',
+                          hintText: 'Введите пароль',
+                          controller: _passwordController,
+                          obscureText: true,
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 12),
+
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -105,6 +111,7 @@ class _AuthPageState extends State<AuthPage> {
                           );
                         },
                       ),
+                      const SizedBox(height: 20),
                       CustomButton(
                         title: 'Регистрация',
                         onPressed: () {
