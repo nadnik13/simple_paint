@@ -34,10 +34,15 @@ final GoRouter _router = GoRouter(
     return null;
   },
   routes: [
-    GoRoute(path: '/auth', builder: (context, state) => AuthPage()),
     GoRoute(
-      path: '/registration',
-      builder: (context, state) => RegistrationPage(),
+      path: '/auth',
+      builder: (context, state) => AuthPage(),
+      routes: [
+        GoRoute(
+          path: '/registration',
+          builder: (context, state) => RegistrationPage(),
+        ),
+      ],
     ),
 
     ShellRoute(
@@ -66,13 +71,15 @@ final GoRouter _router = GoRouter(
         GoRoute(
           path: '/gallery',
           builder: (context, state) => const GalleryPage(),
-        ),
-        GoRoute(
-          path: '/draw',
-          builder: (context, state) {
-            final imageId = state.extra as String?;
-            return DrawingPage(imageId: imageId);
-          },
+          routes: [
+            GoRoute(
+              path: '/draw',
+              builder: (context, state) {
+                final imageId = state.extra as String?;
+                return DrawingPageWrapper(imageId: imageId);
+              },
+            ),
+          ],
         ),
       ],
     ),

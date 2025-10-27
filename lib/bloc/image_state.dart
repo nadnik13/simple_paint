@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:equatable/equatable.dart';
 
@@ -17,17 +17,15 @@ class ImageSaving extends ImageState {}
 
 class ImageLoaded extends ImageState {
   final String imageId;
-  final String userId;
-  final Uint8List originalBytes;
+  final ui.Image? backgroundImage;
 
   const ImageLoaded({
-    required this.imageId,
-    required this.userId,
-    required this.originalBytes,
+    required this.imageId, 
+    this.backgroundImage,
   });
 
   @override
-  List<Object?> get props => [imageId, userId, originalBytes];
+  List<Object?> get props => [imageId, backgroundImage];
 }
 
 class ImageSaved extends ImageState {

@@ -1,4 +1,4 @@
-import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:equatable/equatable.dart';
 
@@ -21,25 +21,22 @@ class LoadOriginalImageEvent extends ImageEvent {
 
 class SaveOriginalImageEvent extends ImageEvent {
   final String imageId;
-  final Uint8List originalBytes;
+  final ui.Image image;
 
-  const SaveOriginalImageEvent({
-    required this.imageId,
-    required this.originalBytes,
-  });
+  const SaveOriginalImageEvent({required this.imageId, required this.image});
 
   @override
-  List<Object> get props => [imageId, originalBytes];
+  List<Object> get props => [imageId, image];
 }
 
 class CreateNewImageEvent extends ImageEvent {
-  final Uint8List originalBytes;
+  final ui.Image image;
   final String mime;
 
-  const CreateNewImageEvent({required this.originalBytes, required this.mime});
+  const CreateNewImageEvent({required this.image, required this.mime});
 
   @override
-  List<Object> get props => [originalBytes, mime];
+  List<Object> get props => [image, mime];
 }
 
 class ClearImageEvent extends ImageEvent {}
