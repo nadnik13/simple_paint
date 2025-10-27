@@ -108,7 +108,7 @@ class _AuthPageState extends State<AuthPage> {
                       CustomButton(
                         title: 'Регистрация',
                         onPressed: () {
-                          context.go('/registration');
+                          context.go('/auth/registration');
                         },
                       ),
                     ],

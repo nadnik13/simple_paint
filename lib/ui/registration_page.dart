@@ -64,78 +64,70 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      canPop: true,
-      onPopInvokedWithResult: (didPop, _) {
-        if (didPop) {
-          context.go('/auth');
-        }
-      },
-      child: Scaffold(
-        body: Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/background.png'),
-              fit: BoxFit.cover,
-            ),
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/background.png'),
+            fit: BoxFit.cover,
           ),
-          child: SafeArea(
-            child: BlocListener<AccountDataBloc, AccountDataState>(
-              listener: (context, state) {
-                if (state is AccountDataError) {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(SnackBar(content: Text(state.message)));
-                } else if (state is AccountDataAuthenticated) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Успешная регистрация!')),
-                  );
-                  context.go('/auth'); // Возвращаемся на страницу входа
-                }
-              },
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        const Text('Регистрация', textAlign: TextAlign.start),
-                        const SizedBox(height: 20),
-                        CustomFormField(
-                          label: 'Имя',
-                          hintText: 'Введите ваше имя',
-                          controller: _nameController,
-                        ),
-                        CustomFormField(
-                          label: 'e-mail',
-                          hintText: 'Введите электронную почту',
-                          controller: _emailController,
-                        ),
-                        CustomFormField(
-                          label: 'Пароль',
-                          hintText: 'Введите пароль',
-                          controller: _passwordController,
-                          obscureText: true,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    BlocBuilder<AccountDataBloc, AccountDataState>(
-                      builder: (context, state) {
-                        return CustomButton(
-                          title:
-                              state is AccountDataLoading
-                                  ? 'Загрузка...'
-                                  : 'Зарегистрироваться',
-                          onPressed:
-                              state is AccountDataLoading ? null : _register,
-                        );
-                      },
-                    ),
-                  ],
-                ),
+        ),
+        child: SafeArea(
+          child: BlocListener<AccountDataBloc, AccountDataState>(
+            listener: (context, state) {
+              if (state is AccountDataError) {
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text(state.message)));
+              } else if (state is AccountDataAuthenticated) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Успешная регистрация!')),
+                );
+                context.go('/auth'); // Возвращаемся на страницу входа
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text('Регистрация', textAlign: TextAlign.start),
+                      const SizedBox(height: 20),
+                      CustomFormField(
+                        label: 'Имя',
+                        hintText: 'Введите ваше имя',
+                        controller: _nameController,
+                      ),
+                      CustomFormField(
+                        label: 'e-mail',
+                        hintText: 'Введите электронную почту',
+                        controller: _emailController,
+                      ),
+                      CustomFormField(
+                        label: 'Пароль',
+                        hintText: 'Введите пароль',
+                        controller: _passwordController,
+                        obscureText: true,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  BlocBuilder<AccountDataBloc, AccountDataState>(
+                    builder: (context, state) {
+                      return CustomButton(
+                        title:
+                            state is AccountDataLoading
+                                ? 'Загрузка...'
+                                : 'Зарегистрироваться',
+                        onPressed:
+                            state is AccountDataLoading ? null : _register,
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ),

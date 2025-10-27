@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:simple_paint/data/user_repo.dart';
@@ -21,6 +25,15 @@ class ImageBloc extends Bloc<ImageEvent, ImageState> {
     on<ClearImageEvent>(_onClearImage);
   }
 
+  Future<ui.Image?> _loadImageFromBytes(Uint8List? bytes) async {
+    if (bytes == null) return null;
+    final Completer<ui.Image> completer = Completer();
+    ui.decodeImageFromList(bytes, (ui.Image img) {
+      completer.complete(img);
+    });
+    return completer.future;
+  }
+
   Future<void> _onLoadOriginalImage(
     LoadOriginalImageEvent event,
     Emitter<ImageState> emit,
@@ -29,12 +42,9 @@ class ImageBloc extends Bloc<ImageEvent, ImageState> {
 
     try {
       final originalBytes = await _imageRepo.downloadOriginal(event.imageId);
+      final backgroundImage = await _loadImageFromBytes(originalBytes);
       emit(
-        ImageLoaded(
-          imageId: event.imageId,
-          userId: event.userId,
-          originalBytes: originalBytes,
-        ),
+        ImageLoaded(imageId: event.imageId, backgroundImage: backgroundImage),
       );
     } catch (e) {
       emit(ImageError(message: 'Ошибка загрузки изображения: $e'));
@@ -48,12 +58,14 @@ class ImageBloc extends Bloc<ImageEvent, ImageState> {
     print('_onSaveOriginalImage');
     emit(ImageSaving());
 
+    final Uint8List bytes = await ImageService.getBytes(event.image);
+
     try {
       await _imageRepo.replaceImage(
         imageId: event.imageId,
         userId: _userRepo.userId,
-        originalBytes: event.originalBytes,
-        previewBytes: ImageService.compressAndResize(event.originalBytes),
+        originalBytes: bytes,
+        previewBytes: ImageService.compressAndResize(bytes),
         mime: 'image/png',
       );
 
@@ -74,29 +86,32 @@ class ImageBloc extends Bloc<ImageEvent, ImageState> {
   ) async {
     print('_onCreateNewImage');
     print('UserRepo userId: ${_userRepo.userId}');
-    
+
     // Проверим текущего пользователя Firebase Auth
     final currentUser = FirebaseAuth.instance.currentUser;
     print('Firebase Auth currentUser: ${currentUser?.uid}');
     print('Firebase Auth isSignedIn: ${currentUser != null}');
-    
+
     if (currentUser == null) {
       print('ОШИБКА: Пользователь не аутентифицирован!');
       emit(ImageError(message: 'Ошибка: пользователь не аутентифицирован'));
       return;
     }
-    
+
     if (_userRepo.userId != currentUser.uid) {
-      print('ПРЕДУПРЕЖДЕНИЕ: userId в UserRepo (${_userRepo.userId}) не совпадает с Firebase Auth (${currentUser.uid})');
+      print(
+        'ПРЕДУПРЕЖДЕНИЕ: userId в UserRepo (${_userRepo.userId}) не совпадает с Firebase Auth (${currentUser.uid})',
+      );
     }
-    
+
     emit(ImageSaving());
+    final bytes = await ImageService.getBytes(event.image);
     try {
       print('uploadOriginalWithPreview с userId: ${_userRepo.userId}');
       final imageId = await _imageRepo.uploadOriginalWithPreview(
         userId: _userRepo.userId,
-        originalBytes: event.originalBytes,
-        previewBytes: ImageService.compressAndResize(event.originalBytes),
+        originalBytes: bytes,
+        previewBytes: ImageService.compressAndResize(bytes),
         mime: event.mime,
       );
       emit(

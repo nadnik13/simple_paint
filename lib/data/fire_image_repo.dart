@@ -19,12 +19,11 @@ class FireImageRepo {
     required Uint8List previewBytes,
     required String mime,
   }) async {
-    final doc = db.collection('images').doc();
-    final imageId = doc.id;
+    final metaRef = db.collection('images').doc();
+    final imageId = metaRef.id;
 
     // 1) метаданные
     final chunkCount = (originalBytes.length + chunkSize - 1) ~/ chunkSize;
-    final metaRef = doc;
     await metaRef.set({
       'ownerUid': userId,
       'mime': mime,
@@ -44,7 +43,10 @@ class FireImageRepo {
       final slice = originalBytes.sublist(offset, end);
       offset = end;
 
-      await chunks.add({'index': i, 'data': slice});
+      final metaRef = chunks.doc();
+      final chunkId = metaRef.id;
+
+      await metaRef.set({'chunkId': chunkId, 'index': i, 'data': slice});
     }
 
     final thumbBytes = previewBytes;
@@ -120,7 +122,9 @@ class FireImageRepo {
 
   /// Скачивание и сборка оригинала
   Future<Uint8List> downloadOriginal(String imageId) async {
+    print('downloadOriginal');
     final meta = await db.collection('images').doc(imageId).get();
+    print('get meta');
     if (!meta.exists) {
       throw StateError('Image $imageId not found');
     }
@@ -136,9 +140,9 @@ class FireImageRepo {
     final parts = <Uint8List>[];
     var total = 0;
     for (final d in chunkSnap.docs) {
-      final p = d['data'] as Uint8List;
-      parts.add(p);
-      total += p.length;
+      final data = Uint8List.fromList((d['data'] as List).cast<int>());
+      parts.add(data);
+      total += data.length;
     }
     final out = Uint8List(total);
     var off = 0;

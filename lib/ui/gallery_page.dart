@@ -20,43 +20,43 @@ class GalleryPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return ScaffoldWithBackground(
       appBar: AppBar(
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
         leading: IconButton(
-          icon: Icon(Icons.exit_to_app),
+          icon: Image.asset('assets/logout.png'),
           onPressed: () {
             context.read<AccountDataBloc>().add(LogoutEvent());
             context.read<GalleryBloc>().add(ClearImagesEvent());
             context.go('/auth');
           },
         ),
-        title: Text('Галерея'),
+        title: Text('Галерея', style: TextStyle(color: Color(0xEEEEEEEE))),
         actions: [
           IconButton(
-            onPressed: () => context.go('/draw', extra: null),
-            icon: Icon(Icons.format_paint_outlined),
-          ),
-          IconButton(
             onPressed: () {
-              final accountState = context.read<AccountDataBloc>().state;
-              if (accountState is AccountDataAuthenticated) {
-                print('Manual refresh triggered');
-                context.read<GalleryBloc>().add(RefreshImagesEvent());
-              }
+              context.read<ImageBloc>().add(ClearImageEvent());
+              context.go('/gallery/draw', extra: null);
             },
-            icon: Icon(Icons.refresh),
+            icon: Image.asset('assets/draw.png'),
           ),
+          // IconButton(
+          //   onPressed: () {
+          //     final accountState = context.read<AccountDataBloc>().state;
+          //     if (accountState is AccountDataAuthenticated) {
+          //       print('Manual refresh triggered');
+          //       context.read<GalleryBloc>().add(RefreshImagesEvent());
+          //     }
+          //   },
+          //   icon: Icon(Icons.refresh, color: Color(0xEEEEEEEE)),
+          // ),
         ],
       ),
       child: BlocListener<AccountDataBloc, AccountDataState>(
         listener: (context, accountState) {
           print('AccountDataBloc state changed: ${accountState.runtimeType}');
           if (accountState is AccountDataAuthenticated) {
-            final userId = accountState.user.uid;
-            print('User authenticated with uid: $userId');
-            print('Loading images for authenticated user...');
             context.read<GalleryBloc>().add(LoadUserImagesEvent());
-            print('LoadUserImagesEvent dispatched');
           } else if (accountState is AccountDataUnauthenticated) {
-            print('User unauthenticated, clearing images');
             context.read<GalleryBloc>().add(ClearImagesEvent());
           }
         },
@@ -70,7 +70,6 @@ class GalleryPage extends StatelessWidget {
   }
 
   Widget _buildContent(BuildContext context, GalleryState state) {
-    print('_buildContent called with state: ${state.runtimeType}');
     if (state is GalleryInitialState) {
       final accountState = context.read<AccountDataBloc>().state;
       if (accountState is AccountDataAuthenticated) {
@@ -135,7 +134,7 @@ class GalleryPage extends StatelessWidget {
             ),
             SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => context.go('/draw'),
+              onPressed: () => context.go('/gallery/draw'),
               child: Text('Создать первый рисунок'),
             ),
           ],
@@ -144,28 +143,24 @@ class GalleryPage extends StatelessWidget {
     }
 
     if (state is GalleryLoadedState) {
-      return _buildImageGrid(context, state.userId, state.images);
+      return _buildImageGrid(context, state.images);
     }
 
     // ImageLoaderInitial или неизвестное состояние
     return const Center(child: Text('Инициализация...'));
   }
 
-  Widget _buildImageGrid(
-    BuildContext context,
-    String userId,
-    List<ImageInfoItem> items,
-  ) {
+  Widget _buildImageGrid(BuildContext context, List<ImageInfoItem> items) {
     return RefreshIndicator(
       onRefresh: () async {
         context.read<GalleryBloc>().add(RefreshImagesEvent());
       },
       child: GridView.builder(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 46),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          crossAxisSpacing: 4,
-          mainAxisSpacing: 4,
+          crossAxisCount: 2,
+          crossAxisSpacing: 20,
+          mainAxisSpacing: 20,
         ),
         itemCount: items.length,
         itemBuilder:
@@ -177,7 +172,7 @@ class GalleryPage extends StatelessWidget {
                     userId: items[i].userId,
                   ),
                 );
-                context.go('/draw', extra: items[i]);
+                context.go('/gallery/draw', extra: items[i].imageId);
               },
               child: Container(
                 decoration: BoxDecoration(
