@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CustomFormField extends StatelessWidget {
   final String label;
@@ -23,30 +26,106 @@ class CustomFormField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Лейбл поля
-        Text(label),
-        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
+            //enabled: false,
+            child: Stack(
+              children: [
+                Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xFF131313).withAlpha(63),
+                    border: Border.all(width: 0.5, color: Color(0xFF87858F)),
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(
+                          0x34E3E3E3,
+                        ).withAlpha(51), // 20% прозрачности
+                        //offset: const Offset(0, 1),
+                        // blurRadius: 40,
+                        // spreadRadius: 0,
+                      ),
+                      BoxShadow(
+                        color: Color(0xFF131313), // 20% прозрачности
+                        blurRadius: 40,
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Лейбл поля
+                        Text(
+                          label,
+                          style: GoogleFonts.roboto(
+                            fontSize: 12,
+                            color: Color(0xFF87858F),
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
 
-        // Поле ввода
-        TextFormField(
-          controller: controller,
-          obscureText: obscureText,
-          keyboardType: keyboardType,
-          validator: validator,
-          onChanged: onChanged,
-          decoration: InputDecoration(
-            hintText: hintText,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
+                        // Поле ввода
+                        TextFormField(
+                          controller: controller,
+                          obscureText: obscureText,
+                          keyboardType: keyboardType,
+                          validator: validator,
+                          onChanged: onChanged,
+                          style: GoogleFonts.roboto(
+                            fontSize: 14,
+                            color: Color(0xFF87858F),
+                            fontWeight: FontWeight.w400,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: hintText,
+                            hintStyle: GoogleFonts.roboto(
+                              fontSize: 14,
+                              color: Color(0xFF87858F),
+                              fontWeight: FontWeight.w400,
+                            ),
+                            floatingLabelStyle: GoogleFonts.roboto(
+                              fontSize: 14,
+                              color: Color(0xFF87858F),
+                              fontWeight: FontWeight.w400,
+                            ),
+                            contentPadding: EdgeInsets.only(bottom: 2),
+                            isDense: true,
+                            border: UnderlineInputBorder(
+                              borderRadius: BorderRadius.zero,
+                              borderSide: BorderSide(
+                                width: 0.3,
+                                color: Color(0xFF87858F),
+                              ),
+                            ),
+                            enabledBorder: UnderlineInputBorder(
+                              borderRadius: BorderRadius.zero,
+                              borderSide: BorderSide(
+                                width: 0.3,
+                                color: Color(0xFF87858F),
+                              ),
+                            ),
+                            focusedBorder: UnderlineInputBorder(
+                              borderRadius: BorderRadius.zero,
+                              borderSide: BorderSide(
+                                width: 0.3,
+                                color: Color(0xFF87858F),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            //border: InputBorder.none,
-            //enabledBorder: InputBorder.none,
-            //focusedBorder: InputBorder.none,
-            //errorBorder: InputBorder.none,
-            //focusedErrorBorder: InputBorder.none,
           ),
         ),
       ],

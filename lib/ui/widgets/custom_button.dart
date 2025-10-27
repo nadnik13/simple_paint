@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class CustomButton extends StatelessWidget {
   final bool isDark;
@@ -34,7 +35,10 @@ class CustomButton extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               )
               : BoxDecoration(
-                color: isEnable ? Colors.white : Colors.white.withValues(alpha: 0.5),
+                color:
+                    isEnable
+                        ? Colors.white
+                        : Colors.white.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(8),
               ),
       child: ElevatedButton(
@@ -46,14 +50,15 @@ class CustomButton extends StatelessWidget {
         onPressed: isEnable ? onPressed : null,
         child: Text(
           title,
-          style: TextStyle(
+          style: GoogleFonts.roboto(
+            fontSize: 17,
             color:
                 isEnable
                     ? (isDark ? Colors.white : const Color(0xFF131313))
                     : (isDark
                         ? Colors.white.withValues(alpha: 0.5)
                         : const Color(0xFF131313).withValues(alpha: 0.5)),
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w500,
           ),
         ),
       ),
