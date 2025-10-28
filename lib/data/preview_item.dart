@@ -7,14 +7,14 @@ class ImageInfoItem {
     required this.imageId,
     required this.userId,
     required this.thumb,
-    required this.mime,
     this.createdAt,
+    this.updatedAt,
   });
   final String imageId;
   final String userId;
   final Uint8List thumb;
-  final String mime;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   factory ImageInfoItem.fromDoc(DocumentSnapshot d) {
     print('ImageInfoItem.fromDoc for document: ${d.id}');
@@ -34,8 +34,8 @@ class ImageInfoItem {
     final imageId = m['imageId'];
     final userId = m['userId'];
     final thumb = m['thumb'];
-    final mime = m['mime'];
     final createdAt = m['createdAt'];
+    final updatedAt = m['updatedAt'];
 
     if (imageId == null || imageId is! String || imageId.isEmpty) {
       throw StateError('Document ${d.id} has invalid imageId: $imageId');
@@ -51,11 +51,6 @@ class ImageInfoItem {
       );
     }
 
-    if (mime == null || mime is! String || mime.isEmpty) {
-      throw StateError('Document ${d.id} has invalid mime: $mime');
-    }
-
-    // createdAt может быть null, Timestamp или уже DateTime
     DateTime? parsedCreatedAt;
     if (createdAt != null) {
       if (createdAt is Timestamp) {
@@ -65,16 +60,25 @@ class ImageInfoItem {
       }
     }
 
+    DateTime? parsedUpdatedAt;
+    if (updatedAt != null) {
+      if (updatedAt is Timestamp) {
+        print('parsedUpdatedAt createdAt is Timestamp');
+        parsedCreatedAt = updatedAt.toDate();
+      } else if (updatedAt is DateTime) {
+        print('parsedUpdatedAt createdAt is DateTime');
+        parsedCreatedAt = updatedAt;
+      }
+    }
     print(
       'Successfully parsed document ${d.id} with imageId: $imageId, createdAt: $parsedCreatedAt',
     );
-
     return ImageInfoItem(
       imageId: imageId,
       userId: userId,
       thumb: Uint8List.fromList((thumb).cast<int>()),
-      mime: mime,
       createdAt: parsedCreatedAt,
+      updatedAt: parsedUpdatedAt,
     );
   }
 }

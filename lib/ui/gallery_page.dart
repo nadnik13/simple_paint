@@ -10,8 +10,6 @@ import 'package:simple_paint/ui/widgets/scaffold_with_background.dart';
 
 import '../bloc/account_data_bloc.dart';
 import '../bloc/account_data_state.dart';
-import '../bloc/image_bloc.dart';
-import '../bloc/image_event.dart';
 
 class GalleryPage extends StatelessWidget {
   const GalleryPage({super.key});
@@ -26,7 +24,7 @@ class GalleryPage extends StatelessWidget {
           icon: Image.asset('assets/logout.png'),
           onPressed: () {
             context.read<AccountDataBloc>().add(LogoutEvent());
-            context.read<GalleryBloc>().add(ClearImagesEvent());
+            context.read<GalleryBloc>().add(ClearGalleryEvent());
             context.go('/auth');
           },
         ),
@@ -34,30 +32,19 @@ class GalleryPage extends StatelessWidget {
         actions: [
           IconButton(
             onPressed: () {
-              context.read<ImageBloc>().add(ClearImageEvent());
               context.go('/gallery/draw', extra: null);
             },
             icon: Image.asset('assets/draw.png'),
           ),
-          // IconButton(
-          //   onPressed: () {
-          //     final accountState = context.read<AccountDataBloc>().state;
-          //     if (accountState is AccountDataAuthenticated) {
-          //       print('Manual refresh triggered');
-          //       context.read<GalleryBloc>().add(RefreshImagesEvent());
-          //     }
-          //   },
-          //   icon: Icon(Icons.refresh, color: Color(0xEEEEEEEE)),
-          // ),
         ],
       ),
       child: BlocListener<AccountDataBloc, AccountDataState>(
         listener: (context, accountState) {
           print('AccountDataBloc state changed: ${accountState.runtimeType}');
           if (accountState is AccountDataAuthenticated) {
-            context.read<GalleryBloc>().add(LoadUserImagesEvent());
+            context.read<GalleryBloc>().add(LoadGalleryEvent());
           } else if (accountState is AccountDataUnauthenticated) {
-            context.read<GalleryBloc>().add(ClearImagesEvent());
+            context.read<GalleryBloc>().add(ClearGalleryEvent());
           }
         },
         child: BlocBuilder<GalleryBloc, GalleryState>(
@@ -71,10 +58,7 @@ class GalleryPage extends StatelessWidget {
 
   Widget _buildContent(BuildContext context, GalleryState state) {
     if (state is GalleryInitialState) {
-      final accountState = context.read<AccountDataBloc>().state;
-      if (accountState is AccountDataAuthenticated) {
-        context.read<GalleryBloc>().add(LoadUserImagesEvent());
-      }
+      context.read<GalleryBloc>().add(LoadGalleryEvent());
     }
     if (state is GalleryLoadingState) {
       print('Showing loading state');
@@ -93,7 +77,7 @@ class GalleryPage extends StatelessWidget {
       );
     }
 
-    if (state is ImageLoaderError) {
+    if (state is GalleryLoadingError) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -110,7 +94,7 @@ class GalleryPage extends StatelessWidget {
               onPressed: () {
                 final accountState = context.read<AccountDataBloc>().state;
                 if (accountState is AccountDataAuthenticated) {
-                  context.read<GalleryBloc>().add(RefreshImagesEvent());
+                  context.read<GalleryBloc>().add(RefreshGalleryEvent());
                 }
               },
               child: Text('Попробовать снова'),
@@ -120,7 +104,7 @@ class GalleryPage extends StatelessWidget {
       );
     }
 
-    if (state is ImageLoaderEmpty) {
+    if (state is GalleryIsEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -146,14 +130,13 @@ class GalleryPage extends StatelessWidget {
       return _buildImageGrid(context, state.images);
     }
 
-    // ImageLoaderInitial или неизвестное состояние
     return const Center(child: Text('Инициализация...'));
   }
 
   Widget _buildImageGrid(BuildContext context, List<ImageInfoItem> items) {
     return RefreshIndicator(
       onRefresh: () async {
-        context.read<GalleryBloc>().add(RefreshImagesEvent());
+        context.read<GalleryBloc>().add(RefreshGalleryEvent());
       },
       child: GridView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 46),
@@ -166,12 +149,6 @@ class GalleryPage extends StatelessWidget {
         itemBuilder:
             (_, i) => GestureDetector(
               onTap: () async {
-                context.read<ImageBloc>().add(
-                  LoadOriginalImageEvent(
-                    imageId: items[i].imageId,
-                    userId: items[i].userId,
-                  ),
-                );
                 context.go('/gallery/draw', extra: items[i].imageId);
               },
               child: Container(

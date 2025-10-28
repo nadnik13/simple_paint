@@ -30,31 +30,31 @@ class Toolbar extends StatelessWidget {
       spacing: 8,
       children: [
         ToolBarIconButton(
-          iconData: Icons.save_alt_outlined,
+          icon: Image.asset('assets/download.png'),
           onPressed: onPressedExport,
         ),
 
-        IconButton(
-          icon: Image.asset('assets/back.png'),
+        ToolBarIconButton(
+          icon: Image.asset('assets/image.png'),
           onPressed: onPressedImage,
         ),
 
         ToolBarIconButton(
-          iconData: Icons.draw_outlined,
+          icon: Image.asset('assets/pen.png'),
           onPressed: onPressedPen,
           isActive: activePenType == PenType.pencil,
         ),
 
         ToolBarIconButton(
-          iconData: Icons.cleaning_services_outlined,
+          icon: Image.asset('assets/eraser.png'),
           onPressed: onPressedErase,
           isActive: activePenType == PenType.eraser,
         ),
 
-        IconButton(
-          icon: Image.asset('assets/back.png'),
+        ToolBarIconButton(
+          icon: Image.asset('assets/palette.png'),
           onPressed: onPressedColorLens,
-          color: isPaletteOpen ? Colors.deepPurple : Colors.white,
+          isActive: isPaletteOpen,
         ),
       ],
     );

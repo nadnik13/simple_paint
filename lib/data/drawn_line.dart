@@ -15,7 +15,7 @@ class DrawnLine extends Equatable {
     required this.blendMode,
   });
 
-  static DrawnLine getByPathAndPen({
+  factory DrawnLine.getByPathAndPen({
     required List<Offset?> path,
     required StrokePen pen,
   }) {
@@ -35,6 +35,34 @@ class DrawnLine extends Equatable {
       case PenType.pencil:
         return BlendMode.srcOver;
     }
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'path':
+          path
+              .map(
+                (offset) =>
+                    offset != null ? {'dx': offset.dx, 'dy': offset.dy} : null,
+              )
+              .toList(),
+      'color': color.toARGB32(),
+      'width': width,
+      'blendMode': blendMode.index,
+    };
+  }
+
+  factory DrawnLine.fromJson(Map<String, dynamic> json) {
+    return DrawnLine(
+      path:
+          (json['path'] as List).map((point) {
+            if (point == null) return null;
+            return Offset(point['dx'], point['dy']);
+          }).toList(),
+      color: Color(json['color']),
+      width: json['width'],
+      blendMode: BlendMode.values[json['blendMode']],
+    );
   }
 
   @override
