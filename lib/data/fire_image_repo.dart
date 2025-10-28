@@ -9,59 +9,6 @@ class FireImageRepo {
 
   FireImageRepo(this.db);
 
-  /// Загрузка нового изображения:
-  /// - режем оригинал на чанки -> images/{imageId}/chunks
-  /// - пишем метаданные -> images/{imageId}
-  /// - пишем превью -> preview_images/{imageId}
-  Future<String> uploadOriginalWithPreview({
-    required String userId,
-    required Uint8List originalBytes,
-    required Uint8List previewBytes,
-    required String mime,
-  }) async {
-    final metaRef = db.collection('images').doc();
-    final imageId = metaRef.id;
-
-    // 1) метаданные
-    final chunkCount = (originalBytes.length + chunkSize - 1) ~/ chunkSize;
-    await metaRef.set({
-      'ownerUid': userId,
-      'mime': mime,
-      'size': originalBytes.length,
-      'chunkCount': chunkCount,
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-
-    // 2) чанки (последовательно, чтобы не упереться в лимиты)
-    final chunks = metaRef.collection('chunks');
-    var offset = 0;
-    for (int i = 0; i < chunkCount; i++) {
-      final end =
-          (offset + chunkSize > originalBytes.length)
-              ? originalBytes.length
-              : offset + chunkSize;
-      final slice = originalBytes.sublist(offset, end);
-      offset = end;
-
-      final metaRef = chunks.doc();
-      final chunkId = metaRef.id;
-
-      await metaRef.set({'chunkId': chunkId, 'index': i, 'data': slice});
-    }
-
-    final thumbBytes = previewBytes;
-    await db.collection('preview_images').doc(imageId).set({
-      'imageId': imageId,
-      'userId': userId,
-      'thumb': thumbBytes,
-      'mime': 'image/jpeg',
-      'createdAt': FieldValue.serverTimestamp(),
-    });
-
-    return imageId;
-  }
-
-  /// Стрим превью для галереи пользователя
   Future<List<ImageInfoItem>> previews(String userId) async {
     print('FireImageRepo.previews() called for userId: $userId');
 
@@ -72,8 +19,6 @@ class FireImageRepo {
 
     try {
       print('Creating Firestore query...');
-      // Используем только фильтрацию по userId без сортировки, чтобы избежать составного индекса
-      // Сортировку выполним на клиенте
       final querySnapshot =
           await db
               .collection('preview_images')
@@ -90,25 +35,25 @@ class FireImageRepo {
           print('Successfully parsed document: ${doc.id}');
         } catch (e) {
           print('Error parsing document ${doc.id}: $e');
-          // Пропускаем поврежденные документы вместо падения всего стрима
           continue;
         }
       }
-
-      // Сортируем на клиенте по createdAt (новые сверху)
+      //:TODO доделать
       items.sort((a, b) {
-        // Если у обоих есть createdAt, сортируем по нему
+        if (a.updatedAt != null && b.updatedAt != null) {
+          return b.updatedAt!.compareTo(a.updatedAt!);
+        }
+        if (a.updatedAt != null && b.createdAt == null) {
+          throw Exception('a.updatedAt != null && b.createdAt == null');
+          return -1;
+        }
+        if (a.updatedAt == null && b.updatedAt != null) {
+          throw Exception('a.updatedAt == null && b.updatedAt != null');
+          return 1;
+        }
         if (a.createdAt != null && b.createdAt != null) {
           return b.createdAt!.compareTo(a.createdAt!);
         }
-        // Если у одного есть createdAt, а у другого нет, приоритет тому, у кого есть
-        if (a.createdAt != null && b.createdAt == null) {
-          return -1;
-        }
-        if (a.createdAt == null && b.createdAt != null) {
-          return 1;
-        }
-        // Если у обоих нет createdAt, сортируем по imageId (который содержит timestamp от Firestore)
         return b.imageId.compareTo(a.imageId);
       });
 
@@ -120,26 +65,38 @@ class FireImageRepo {
     }
   }
 
-  /// Скачивание и сборка оригинала
-  Future<Uint8List> downloadOriginal(String imageId) async {
-    print('downloadOriginal');
+  Future<Map<String, Uint8List>> downloadData(String imageId) async {
     final meta = await db.collection('images').doc(imageId).get();
     print('get meta');
+
     if (!meta.exists) {
       throw StateError('Image $imageId not found');
     }
-    final chunkSnap =
+    final bgSnap =
         await db
             .collection('images')
             .doc(imageId)
-            .collection('chunks')
+            .collection('background')
+            .orderBy('index')
+            .get();
+    print('bgSnap: ${bgSnap.size}');
+
+    final linesSnap =
+        await db
+            .collection('images')
+            .doc(imageId)
+            .collection('lines')
             .orderBy('index')
             .get();
 
-    // склеиваем
+    print('linesSnap: ${linesSnap.size}');
+    return {'background': _getBytes(bgSnap), 'lines': _getBytes(linesSnap)};
+  }
+
+  Uint8List _getBytes(QuerySnapshot<Map<String, dynamic>> snap) {
     final parts = <Uint8List>[];
     var total = 0;
-    for (final d in chunkSnap.docs) {
+    for (final d in snap.docs) {
       final data = Uint8List.fromList((d['data'] as List).cast<int>());
       parts.add(data);
       total += data.length;
@@ -153,59 +110,168 @@ class FireImageRepo {
     return out;
   }
 
-  /// Замена оригинала (редактирование): перезапишем чанки и мета, превью — тоже
-  Future<void> replaceImage({
-    required String imageId,
+  Future<String> saveImage({
     required String userId,
-    required Uint8List originalBytes,
+    required String? imageId,
+    required Uint8List bgBytes,
     required Uint8List previewBytes,
-    required String mime,
+    required Uint8List linesBytes,
   }) async {
-    final metaRef = db.collection('images').doc(imageId);
+    print('saveImage fireStore');
 
-    // 1) удалить старые чанки
-    final old = await metaRef.collection('chunks').get();
-    for (final d in old.docs) {
+    if (imageId == null) {
+      print('_uploadImage: ${previewBytes.length}');
+      return _uploadImage(
+        userId: userId,
+        bgBytes: bgBytes,
+        previewBytes: previewBytes,
+        linesBytes: linesBytes,
+      );
+    } else {
+      print('_replaceImage: ${previewBytes.length}');
+      return _replaceImage(
+        imageId: imageId,
+        userId: userId,
+        bgBytes: bgBytes,
+        previewBytes: previewBytes,
+        linesBytes: linesBytes,
+      );
+    }
+  }
+
+  Future<void> _removeChunks(
+    QuerySnapshot<Map<String, dynamic>> snapshot,
+  ) async {
+    for (final d in snapshot.docs) {
       await d.reference.delete();
     }
+  }
 
-    // 2) записать новые чанки
-    final chunkCount = (originalBytes.length + chunkSize - 1) ~/ chunkSize;
+  Future<void> _uploadChunks(
+    int chunkCount,
+    Uint8List bytes,
+    CollectionReference<Map<String, dynamic>> collection,
+  ) async {
+    print('_uploadChunks');
     var offset = 0;
     for (int i = 0; i < chunkCount; i++) {
       final end =
-          (offset + chunkSize > originalBytes.length)
-              ? originalBytes.length
+          (offset + chunkSize > bytes.length)
+              ? bytes.length
               : offset + chunkSize;
-      final slice = originalBytes.sublist(offset, end);
+      final slice = bytes.sublist(offset, end);
       offset = end;
-      await metaRef.collection('chunks').add({'index': i, 'data': slice});
+
+      final metaRef = collection.doc();
+      final chunkId = metaRef.id;
+      await metaRef.set({'chunkId': chunkId, 'index': i, 'data': slice});
     }
-
-    // 3) обновить метаданные
-    await metaRef.update({
-      'ownerUid': userId,
-      'mime': mime,
-      'size': originalBytes.length,
-      'chunkCount': chunkCount,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
-
-    // 4) превью
-    final thumb = previewBytes;
-    await db.collection('preview_images').doc(imageId).update({
-      'thumb': thumb,
-      'updatedAt': FieldValue.serverTimestamp(),
-    });
   }
 
-  /// Удаление (и превью, и оригинала)
+  Future<String> _uploadImage({
+    required String userId,
+    required Uint8List bgBytes,
+    required Uint8List previewBytes,
+    required Uint8List linesBytes,
+  }) async {
+    print('_uploadImage fireStore');
+    final metaRef = db.collection('images').doc();
+    final imageId = metaRef.id;
+    final bgChunkCount = (bgBytes.length + chunkSize - 1) ~/ chunkSize;
+    final linesChunkCount = (linesBytes.length + chunkSize - 1) ~/ chunkSize;
+    print('bgChunkCount=$bgChunkCount linesChunkCount=$linesChunkCount');
+    try {
+      await metaRef.set({
+        'ownerUid': userId,
+        'imageId': imageId,
+        'size': bgBytes.length,
+        'bgChunkCount': bgChunkCount,
+        'linesChunkCount': linesChunkCount,
+        'createdAt': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print(e);
+    }
+
+    print('metaRef set');
+
+    await _uploadChunks(
+      bgChunkCount,
+      bgBytes,
+      metaRef.collection('background'),
+    );
+    print('_uploadedChunks background');
+    await _uploadChunks(
+      linesChunkCount,
+      linesBytes,
+      metaRef.collection('lines'),
+    );
+    print('_uploadedChunks lines');
+
+    final thumbBytes = previewBytes;
+    await db.collection('preview_images').doc(imageId).set({
+      'imageId': imageId,
+      'userId': userId,
+      'thumb': thumbBytes,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    return imageId;
+  }
+
+  Future<String> _replaceImage({
+    required String imageId,
+    required String userId,
+    required Uint8List bgBytes,
+    required Uint8List previewBytes,
+    required Uint8List linesBytes,
+  }) async {
+    final metaRef = db.collection('images').doc(imageId);
+
+    final bgOldData = await metaRef.collection('background').get();
+    final linesOldData = await metaRef.collection('lines').get();
+    _removeChunks(bgOldData);
+    _removeChunks(linesOldData);
+
+    final bgChunkCount = (bgBytes.length + chunkSize - 1) ~/ chunkSize;
+    final linesChunkCount = (linesBytes.length + chunkSize - 1) ~/ chunkSize;
+
+    await metaRef.update({
+      'ownerUid': userId,
+      'size': bgBytes.length,
+      'bgChunkCount': bgChunkCount,
+      'linesChunkCount': linesChunkCount,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+
+    await _uploadChunks(
+      bgChunkCount,
+      bgBytes,
+      metaRef.collection('background'),
+    );
+    await _uploadChunks(
+      linesChunkCount,
+      linesBytes,
+      metaRef.collection('lines'),
+    );
+
+    print('thumb updated: ${FieldValue.serverTimestamp()}');
+    final thumbBytes = previewBytes;
+    await db.collection('preview_images').doc(imageId).update({
+      'thumb': thumbBytes,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    return imageId;
+  }
+
   Future<void> deleteImage(String imageId) async {
     final metaRef = db.collection('images').doc(imageId);
-    final chunks = await metaRef.collection('chunks').get();
-    for (final c in chunks.docs) {
-      await c.reference.delete();
-    }
+    final bgChunks = await metaRef.collection('background').get();
+    final linesChunks = await metaRef.collection('lines').get();
+    _removeChunks(bgChunks);
+    _removeChunks(linesChunks);
     await metaRef.delete();
     await db.collection('preview_images').doc(imageId).delete();
   }

@@ -7,18 +7,18 @@ abstract class GalleryEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class LoadUserImagesEvent extends GalleryEvent {
-  const LoadUserImagesEvent();
+class LoadGalleryEvent extends GalleryEvent {
+  const LoadGalleryEvent();
 
   @override
   List<Object> get props => [];
 }
 
-class RefreshImagesEvent extends GalleryEvent {
-  const RefreshImagesEvent();
+class RefreshGalleryEvent extends GalleryEvent {
+  const RefreshGalleryEvent();
 
   @override
   List<Object> get props => [];
 }
 
-class ClearImagesEvent extends GalleryEvent {}
+class ClearGalleryEvent extends GalleryEvent {}

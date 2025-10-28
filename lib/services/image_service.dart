@@ -14,9 +14,13 @@ class ImageService {
     return Uint8List.fromList(img.encodeJpg(resized, quality: quality));
   }
 
-  static Future<Uint8List> getBytes(ui.Image image) async {
-    final ByteData byteData =
-        await image.toByteData(format: ui.ImageByteFormat.png) as ByteData;
-    return byteData.buffer.asUint8List();
+  static Future<Uint8List> getBytes(ui.Image? image) async {
+    if (image != null) {
+      final ByteData byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png) as ByteData;
+      return byteData.buffer.asUint8List();
+    } else {
+      return Uint8List(0);
+    }
   }
 }

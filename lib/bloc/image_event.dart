@@ -2,6 +2,8 @@ import 'dart:ui' as ui;
 
 import 'package:equatable/equatable.dart';
 
+import '../data/drawn_line.dart';
+
 abstract class ImageEvent extends Equatable {
   const ImageEvent();
 
@@ -9,34 +11,58 @@ abstract class ImageEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class LoadOriginalImageEvent extends ImageEvent {
+class LoadImageEvent extends ImageEvent {
   final String imageId;
-  final String userId;
 
-  const LoadOriginalImageEvent({required this.imageId, required this.userId});
+  const LoadImageEvent({required this.imageId});
 
   @override
   List<Object> get props => [imageId];
 }
 
-class SaveOriginalImageEvent extends ImageEvent {
-  final String imageId;
+class SaveImageEvent extends ImageEvent {
+  final String? imageId;
   final ui.Image image;
+  final ui.Image? background;
+  final List<DrawnLine> lines;
 
-  const SaveOriginalImageEvent({required this.imageId, required this.image});
+  const SaveImageEvent({
+    required this.imageId,
+    required this.image,
+    required this.background,
+    required this.lines,
+  });
 
   @override
-  List<Object> get props => [imageId, image];
+  List<Object> get props => [image, lines, lines];
 }
 
-class CreateNewImageEvent extends ImageEvent {
-  final ui.Image image;
-  final String mime;
-
-  const CreateNewImageEvent({required this.image, required this.mime});
+class CreateImageEvent extends ImageEvent {
+  const CreateImageEvent();
 
   @override
-  List<Object> get props => [image, mime];
+  List<Object> get props => [];
 }
 
-class ClearImageEvent extends ImageEvent {}
+class AddLineEvent extends ImageEvent {
+  const AddLineEvent();
+
+  @override
+  List<Object> get props => [];
+}
+
+class AddBackgroundEvent extends ImageEvent {
+  final ui.Image background;
+  const AddBackgroundEvent({required this.background});
+
+  @override
+  List<Object> get props => [background];
+}
+
+class UpdateLineEvent extends ImageEvent {
+  final DrawnLine line;
+  const UpdateLineEvent({required this.line});
+
+  @override
+  List<Object> get props => [line];
+}

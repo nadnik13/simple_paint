@@ -18,6 +18,7 @@ import 'package:simple_paint/ui/widgets/tool_bar.dart';
 
 import '../bloc/gallery_event.dart';
 import '../bloc/image_event.dart';
+import '../bloc/image_state.dart';
 
 class DrawingPageWrapper extends StatelessWidget {
   final String? imageId;
@@ -39,45 +40,110 @@ class DrawingPage extends StatefulWidget {
   const DrawingPage({super.key, required this.imageId});
 
   @override
-  _DrawingPageState createState() => _DrawingPageState();
+  State createState() => _DrawingPageState();
 }
 
 class _DrawingPageState extends State<DrawingPage> {
-  final GlobalKey _repainBoundaryGlobalKey = new GlobalKey();
-  List<DrawnLine> backgrond = <DrawnLine>[];
+  final GlobalKey _repainBoundaryGlobalKey = GlobalKey();
 
-  Future<void> save() async {
+  Future<ui.Image> _getImageFromRenderObject() async {
+    RenderRepaintBoundary boundary =
+        _repainBoundaryGlobalKey.currentContext?.findRenderObject()
+            as RenderRepaintBoundary;
+    return await boundary.toImage();
+  }
+
+  @override
+  void initState() {
+    final imageId = widget.imageId;
+    context.read<ImageBloc>().add(
+      (imageId != null) ? LoadImageEvent(imageId: imageId) : CreateImageEvent(),
+    );
+
+    super.initState();
+  }
+
+  Future<void> _onPressSaveButton(
+    String? imageId,
+    ui.Image background,
+    List<DrawnLine> lines,
+  ) async {
     print('save image');
-    try {
-      // Используем объединенный boundary для захвата всех элементов
-      RenderRepaintBoundary boundary =
-          _repainBoundaryGlobalKey.currentContext?.findRenderObject()
-              as RenderRepaintBoundary;
 
-      ui.Image image = await boundary.toImage();
+    final image = await _getImageFromRenderObject();
 
-      final imageId = widget.imageId;
-
-      if (imageId != null) {
-        context.read<ImageBloc>().add(
-          SaveOriginalImageEvent(imageId: imageId, image: image),
-        );
-      } else {
-        context.read<ImageBloc>().add(
-          CreateNewImageEvent(image: image, mime: 'image/png'),
-        );
-      }
+    print('lines: ${lines.length}');
+    if (context.mounted) {
+      context.read<ImageBloc>().add(
+        SaveImageEvent(
+          imageId: imageId,
+          image: image,
+          lines: lines,
+          background: background,
+        ),
+      );
       print("saved: ${context.read<ImageBloc>().state}");
       print("saved");
-      context.read<GalleryBloc>().add(RefreshImagesEvent());
+      context.read<GalleryBloc>().add(RefreshGalleryEvent());
       context.go('/gallery');
-    } catch (e) {
-      print('Error: ${e}');
     }
+  }
+
+  // Future<void> export(ImageState imageState) async {
+  //   print('save image');
+  //   try {
+  //     // Используем объединенный boundary для захвата всех элементов
+  //     RenderRepaintBoundary boundary =
+  //         _repainBoundaryGlobalKey.currentContext?.findRenderObject()
+  //             as RenderRepaintBoundary;
+  //
+  //     final imageId = widget.imageId;
+  //     ui.Image image = await boundary.toImage();
+  //
+  //     final imageId = widget.imageId;
+  //
+  //     if (imageId != null) {
+  //       context.read<ImageBloc>().add(
+  //         SaveOriginalImageEvent(imageId: imageId, image: image, lines: []),
+  //       );
+  //     } else {
+  //       context.read<ImageBloc>().add(CreateNewImageEvent(image: image));
+  //     }
+  //     print("saved: ${context.read<ImageBloc>().state}");
+  //     print("saved");
+  //     context.read<GalleryBloc>().add(RefreshImagesEvent());
+  //     context.go('/gallery');
+  //   } catch (e) {
+  //     print('Error: ${e}');
+  //   }
+  // }
+  Future<void> _onPressedSaveButton(
+    String? imageId,
+    ui.Image? backgroundImage,
+    List<DrawnLine> lines,
+  ) async {
+    final image = await _getImageFromRenderObject();
+
+    if (context.mounted) {
+      context.read<ImageBloc>().add(
+        SaveImageEvent(
+          imageId: imageId,
+          image: image,
+          lines: lines,
+          background: backgroundImage,
+        ),
+      );
+      print("saved: ${context.read<ImageBloc>().state}");
+      print("saved");
+      context.read<GalleryBloc>().add(RefreshGalleryEvent());
+      context.go('/gallery');
+    }
+    ;
   }
 
   @override
   Widget build(BuildContext context) {
+    print('imageState: ${context.read<ImageBloc>().state}');
     return ScaffoldWithBackground(
       appBar: AppBar(
         backgroundColor: Color(0x1AC4C4C4),
@@ -93,7 +159,22 @@ class _DrawingPageState extends State<DrawingPage> {
           style: TextStyle(color: Colors.white),
         ),
         actions: [
-          IconButton(onPressed: save, icon: Image.asset('assets/save.png')),
+          BlocBuilder<ImageBloc, ImageState>(
+            builder: (context, imageState) {
+              return IconButton(
+                onPressed:
+                    () =>
+                        (imageState is ImageLoaded)
+                            ? _onPressedSaveButton(
+                              imageState.imageId,
+                              imageState.backgroundImage,
+                              imageState.lines,
+                            )
+                            : null,
+                icon: Image.asset('assets/save.png'),
+              );
+            },
+          ),
         ],
       ),
       child: Padding(
