@@ -2,19 +2,25 @@ import 'package:flutter/material.dart';
 
 class ToolBarIconButton extends StatelessWidget {
   final VoidCallback onPressed;
-  final IconData iconData;
+  final Widget icon;
+  final bool isActive;
 
   const ToolBarIconButton({
     super.key,
     required this.onPressed,
-    required this.iconData,
+    required this.icon,
+    this.isActive = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return CircleAvatar(
-      backgroundColor: Colors.white.withAlpha(20),
-      child: Icon(iconData, size: 20.0, color: Colors.white),
+    return GestureDetector(
+      onTap: onPressed,
+      child: CircleAvatar(
+        backgroundColor:
+            isActive ? Colors.deepPurple : Colors.white.withAlpha(20),
+        child: icon,
+      ),
     );
   }
 }

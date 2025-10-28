@@ -18,13 +18,13 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
     : _imageRepo = imageRepo,
       _userRepo = userRepo,
       super(GalleryInitialState()) {
-    on<LoadUserImagesEvent>(_onLoadUserImages);
-    on<RefreshImagesEvent>(_onRefreshImages);
-    on<ClearImagesEvent>(_onClearImages);
+    on<LoadGalleryEvent>(_onLoadUserImages);
+    on<RefreshGalleryEvent>(_onRefreshImages);
+    on<ClearGalleryEvent>(_onClearImages);
   }
 
   Future<void> _onLoadUserImages(
-    LoadUserImagesEvent event,
+    LoadGalleryEvent event,
     Emitter<GalleryState> emit,
   ) async {
     print('_onLoadUserImages started for userId: ${_userRepo.userId}');
@@ -32,7 +32,9 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
     // Проверяем, что userId не пустой
     if (_userRepo.userId.isEmpty) {
       if (!emit.isDone) {
-        emit(ImageLoaderError(message: 'ID пользователя не может быть пустым'));
+        emit(
+          GalleryLoadingError(message: 'ID пользователя не может быть пустым'),
+        );
       }
       return;
     }
@@ -56,7 +58,7 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
 
       if (images.isEmpty) {
         print('No images found - emitting empty state');
-        emit(ImageLoaderEmpty(userId: _userRepo.userId));
+        emit(GalleryIsEmpty(userId: _userRepo.userId));
       } else {
         print('Emitting loaded state with ${images.length} images');
         emit(GalleryLoadedState(images: images, userId: _userRepo.userId));
@@ -66,14 +68,16 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
       print('Stack trace: $stackTrace');
       // Проверяем, что emitter еще активен перед вызовом emit
       if (!emit.isDone) {
-        emit(ImageLoaderError(message: 'Ошибка загрузки изображений: $error'));
+        emit(
+          GalleryLoadingError(message: 'Ошибка загрузки изображений: $error'),
+        );
       }
     }
     print('_onLoadUserImages ended for userId: ${_userRepo.userId}');
   }
 
   Future<void> _onRefreshImages(
-    RefreshImagesEvent event,
+    RefreshGalleryEvent event,
     Emitter<GalleryState> emit,
   ) async {
     print('_onRefreshImages for userId: ${_userRepo.userId}');
@@ -81,7 +85,9 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
     // Проверяем, что userId не пустой
     if (_userRepo.userId.isEmpty) {
       if (!emit.isDone) {
-        emit(ImageLoaderError(message: 'ID пользователя не может быть пустым'));
+        emit(
+          GalleryLoadingError(message: 'ID пользователя не может быть пустым'),
+        );
       }
       return;
     }
@@ -92,16 +98,16 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
       _imagesSubscription = null;
 
       // Вызываем загрузку напрямую, а не через add() чтобы избежать рекурсии
-      await _onLoadUserImages(LoadUserImagesEvent(), emit);
+      await _onLoadUserImages(LoadGalleryEvent(), emit);
     } catch (e) {
       print('Error in _onRefreshImages: $e');
       if (!emit.isDone) {
-        emit(ImageLoaderError(message: 'Ошибка обновления: $e'));
+        emit(GalleryLoadingError(message: 'Ошибка обновления: $e'));
       }
     }
   }
 
-  void _onClearImages(ClearImagesEvent event, Emitter<GalleryState> emit) {
+  void _onClearImages(ClearGalleryEvent event, Emitter<GalleryState> emit) {
     _imagesSubscription?.cancel();
     _imagesSubscription = null;
     if (!emit.isDone) {

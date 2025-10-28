@@ -23,19 +23,19 @@ class GalleryLoadedState extends GalleryState {
   List<Object?> get props => [images, userId];
 }
 
-class ImageLoaderEmpty extends GalleryState {
+class GalleryIsEmpty extends GalleryState {
   final String userId;
 
-  const ImageLoaderEmpty({required this.userId});
+  const GalleryIsEmpty({required this.userId});
 
   @override
   List<Object?> get props => [userId];
 }
 
-class ImageLoaderError extends GalleryState {
+class GalleryLoadingError extends GalleryState {
   final String message;
 
-  const ImageLoaderError({required this.message});
+  const GalleryLoadingError({required this.message});
 
   @override
   List<Object?> get props => [message];

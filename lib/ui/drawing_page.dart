@@ -1,361 +1,220 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:go_router/go_router.dart';
+import 'package:simple_paint/bloc/gallery_bloc.dart';
 import 'package:simple_paint/bloc/image_bloc.dart';
+import 'package:simple_paint/bloc/toolbar_bloc.dart';
+import 'package:simple_paint/bloc/toolbar_event.dart';
+import 'package:simple_paint/bloc/toolbar_state.dart';
 import 'package:simple_paint/data/drawn_line.dart';
-import 'package:simple_paint/services/sketcher.dart';
-import 'package:simple_paint/ui/widgets/my_color_picker.dart';
+import 'package:simple_paint/ui/widgets/color_palette.dart';
+import 'package:simple_paint/ui/widgets/drawing_area.dart';
 import 'package:simple_paint/ui/widgets/scaffold_with_background.dart';
 import 'package:simple_paint/ui/widgets/tool_bar.dart';
 
+import '../bloc/gallery_event.dart';
 import '../bloc/image_event.dart';
+import '../bloc/image_state.dart';
+
+class DrawingPageWrapper extends StatelessWidget {
+  final String? imageId;
+
+  const DrawingPageWrapper({super.key, required this.imageId});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider<ToolbarBloc>(
+      create: (context) => ToolbarBloc(),
+      child: DrawingPage(imageId: imageId),
+    );
+  }
+}
 
 class DrawingPage extends StatefulWidget {
   final String? imageId;
+
   const DrawingPage({super.key, required this.imageId});
 
   @override
-  _DrawingPageState createState() => _DrawingPageState();
+  State createState() => _DrawingPageState();
 }
 
 class _DrawingPageState extends State<DrawingPage> {
-  final GlobalKey _globalKey = new GlobalKey();
-  final GlobalKey _drawingAreaKey =
-      new GlobalKey(); // Ключ для области рисования
-  Color selectedColor = Colors.black;
-  double selectedWidth = 5.0;
-  List<DrawnLine> lines = <DrawnLine>[];
-  late DrawnLine line;
-  bool isNewLine = true;
-  late StreamController<List<DrawnLine>> linesStreamController;
-  late StreamController<DrawnLine> currentLineStreamController;
+  final GlobalKey _repainBoundaryGlobalKey = GlobalKey();
+
+  Future<ui.Image> _getImageFromRenderObject() async {
+    RenderRepaintBoundary boundary =
+        _repainBoundaryGlobalKey.currentContext?.findRenderObject()
+            as RenderRepaintBoundary;
+    return await boundary.toImage();
+  }
 
   @override
   void initState() {
-    line = DrawnLine(path: [], color: selectedColor);
-    linesStreamController = StreamController<List<DrawnLine>>.broadcast();
-    currentLineStreamController = StreamController<DrawnLine>.broadcast();
+    final imageId = widget.imageId;
+    context.read<ImageBloc>().add(
+      (imageId != null) ? LoadImageEvent(imageId: imageId) : CreateImageEvent(),
+    );
+
     super.initState();
   }
 
-  Future<void> save() async {
+  Future<void> _onPressSaveButton(
+    String? imageId,
+    ui.Image background,
+    List<DrawnLine> lines,
+  ) async {
     print('save image');
-    try {
-      RenderRepaintBoundary boundary =
-          _globalKey.currentContext?.findRenderObject()
-              as RenderRepaintBoundary;
-      print('get boundary ${boundary}');
-      ui.Image image = await boundary.toImage();
-      print('get image ${image}');
-      final ByteData byteData =
-          await image.toByteData(format: ui.ImageByteFormat.png) as ByteData;
-      print('get byteData ${byteData}');
-      Uint8List? pngBytes = byteData.buffer.asUint8List();
-      print('get pngBytes ${pngBytes}');
-      final imageId = widget.imageId;
-      if (imageId != null) {
-        print('imageId != null');
-        context.read<ImageBloc>().add(
-          SaveOriginalImageEvent(imageId: imageId, originalBytes: pngBytes),
-        );
-      } else {
-        context.read<ImageBloc>().add(
-          CreateNewImageEvent(originalBytes: pngBytes, mime: 'image/png'),
-        );
-      }
+
+    final image = await _getImageFromRenderObject();
+
+    print('lines: ${lines.length}');
+    if (context.mounted) {
+      context.read<ImageBloc>().add(
+        SaveImageEvent(
+          imageId: imageId,
+          image: image,
+          lines: lines,
+          background: background,
+        ),
+      );
       print("saved: ${context.read<ImageBloc>().state}");
       print("saved");
+      context.read<GalleryBloc>().add(RefreshGalleryEvent());
       context.go('/gallery');
-    } catch (e) {
-      print('Error: ${e}');
     }
   }
 
-  Future<void> clear() async {
-    setState(() {
-      lines = [];
-      isNewLine = true;
-    });
+  // Future<void> export(ImageState imageState) async {
+  //   print('save image');
+  //   try {
+  //     // Используем объединенный boundary для захвата всех элементов
+  //     RenderRepaintBoundary boundary =
+  //         _repainBoundaryGlobalKey.currentContext?.findRenderObject()
+  //             as RenderRepaintBoundary;
+  //
+  //     final imageId = widget.imageId;
+  //     ui.Image image = await boundary.toImage();
+  //
+  //     final imageId = widget.imageId;
+  //
+  //     if (imageId != null) {
+  //       context.read<ImageBloc>().add(
+  //         SaveOriginalImageEvent(imageId: imageId, image: image, lines: []),
+  //       );
+  //     } else {
+  //       context.read<ImageBloc>().add(CreateNewImageEvent(image: image));
+  //     }
+  //     print("saved: ${context.read<ImageBloc>().state}");
+  //     print("saved");
+  //     context.read<GalleryBloc>().add(RefreshImagesEvent());
+  //     context.go('/gallery');
+  //   } catch (e) {
+  //     print('Error: ${e}');
+  //   }
+  // }
+  Future<void> _onPressedSaveButton(
+    String? imageId,
+    ui.Image? backgroundImage,
+    List<DrawnLine> lines,
+  ) async {
+    final image = await _getImageFromRenderObject();
+
+    if (context.mounted) {
+      context.read<ImageBloc>().add(
+        SaveImageEvent(
+          imageId: imageId,
+          image: image,
+          lines: lines,
+          background: backgroundImage,
+        ),
+      );
+      print("saved: ${context.read<ImageBloc>().state}");
+      print("saved");
+      context.read<GalleryBloc>().add(RefreshGalleryEvent());
+      context.go('/gallery');
+    }
+    ;
   }
 
   @override
   Widget build(BuildContext context) {
+    print('imageState: ${context.read<ImageBloc>().state}');
     return ScaffoldWithBackground(
       appBar: AppBar(
-        backgroundColor: Color(0x1AC4C4C4), // 10% прозрачности
-        elevation: 0,
+        backgroundColor: Color(0x1AC4C4C4),
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
           onPressed: () {
-            print('go_to_galery');
             context.go('/gallery');
           },
-          icon: Icon(Icons.arrow_back_ios_new, color: Colors.white),
+          icon: Image.asset('assets/back.png'),
         ),
-        title:
-            widget.imageId == null
-                ? Text(
-                  'Новое изображение',
-                  style: TextStyle(color: Colors.white),
-                )
-                : Text(
-                  'изображение ${widget.imageId}',
-                  style: TextStyle(color: Colors.white),
-                ),
-        actions: [buildSaveButton()],
+        title: Text(
+          widget.imageId == null ? 'Новое изображение' : 'Редактирование',
+          style: TextStyle(color: Colors.white),
+        ),
+        actions: [
+          BlocBuilder<ImageBloc, ImageState>(
+            builder: (context, imageState) {
+              return IconButton(
+                onPressed:
+                    () =>
+                        (imageState is ImageLoaded)
+                            ? _onPressedSaveButton(
+                              imageState.imageId,
+                              imageState.backgroundImage,
+                              imageState.lines,
+                            )
+                            : null,
+                icon: Image.asset('assets/save.png'),
+              );
+            },
+          ),
+        ],
       ),
       child: Padding(
         padding: const EdgeInsets.all(21.0),
-        child: Column(
-          children: [
-            Toolbar(),
-            SizedBox(height: 12),
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
+        child: BlocBuilder<ToolbarBloc, ToolbarState>(
+          builder: (context, toolbarState) {
+            return Column(
+              children: [
+                Toolbar(
+                  activePenType: toolbarState.strokePen.type,
+                  isPaletteOpen: toolbarState.isPaletteOpen,
+                  onPressedExport: () {
+                    context.read<ToolbarBloc>().add(ExportImageEvent());
+                  },
+                  onPressedImage: () {
+                    context.read<ToolbarBloc>().add(InsertImageEvent());
+                  },
+                  onPressedPen: () {
+                    context.read<ToolbarBloc>().add(SelectPencilEvent());
+                  },
+                  onPressedErase: () {
+                    context.read<ToolbarBloc>().add(SelectEraserEvent());
+                  },
+                  onPressedColorLens: () {
+                    context.read<ToolbarBloc>().add(TogglePaletteEvent());
+                  },
                 ),
-                child: Stack(
-                  children: [
-                    buildAllPaths(context), // Включаем отображение всех линий
-                    buildCurrentPath(context),
-                    buildColorToolbar(),
-                  ],
+                SizedBox(height: 12),
+                Expanded(
+                  child: Stack(
+                    children: [
+                      DrawingArea(canvasKey: _repainBoundaryGlobalKey),
+                      if (toolbarState.isPaletteOpen) ColorPalette(),
+                    ],
+                  ),
                 ),
-              ),
-            ),
-            SizedBox(height: 50),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget buildCurrentPath(BuildContext context) {
-    return GestureDetector(
-      onPanStart: onPanStart,
-      onPanUpdate: onPanUpdate,
-      onPanEnd: onPanEnd,
-      child: RepaintBoundary(
-        key: _drawingAreaKey, // Добавляем ключ к области рисования
-        child: Container(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
-          padding: EdgeInsets.all(4.0),
-          color: Colors.transparent,
-          alignment: Alignment.topLeft,
-          child: StreamBuilder<DrawnLine>(
-            stream: currentLineStreamController.stream,
-            builder: (context, snapshot) {
-              return CustomPaint(painter: Sketcher(lines: [line]));
-            },
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildAllPaths(BuildContext context) {
-    return RepaintBoundary(
-      key: _globalKey,
-      child: Container(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
-        color: Colors.transparent,
-        padding: EdgeInsets.all(4.0),
-        alignment: Alignment.topLeft,
-        child: StreamBuilder<List<DrawnLine>>(
-          stream: linesStreamController.stream,
-          builder: (context, snapshot) {
-            return CustomPaint(painter: Sketcher(lines: lines));
+                SizedBox(height: 50),
+              ],
+            );
           },
-        ),
-      ),
-    );
-  }
-
-  void onPanStart(DragStartDetails details) {
-    // Используем RenderBox области рисования вместо всей страницы
-    RenderBox? box =
-        _drawingAreaKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box != null) {
-      Offset point = box.globalToLocal(details.globalPosition);
-      line = DrawnLine(path: [point], color: selectedColor);
-    }
-  }
-
-  void onPanUpdate(DragUpdateDetails details) {
-    // Используем RenderBox области рисования вместо всей страницы
-    RenderBox? box =
-        _drawingAreaKey.currentContext?.findRenderObject() as RenderBox?;
-    if (box != null) {
-      Offset point = box.globalToLocal(details.globalPosition);
-
-      List<Offset> path = List.from(line.path)..add(point);
-      line = DrawnLine(path: path, color: selectedColor);
-      currentLineStreamController.add(line);
-    }
-  }
-
-  void onPanEnd(DragEndDetails details) {
-    lines = List.from(lines)..add(line);
-    linesStreamController.add(lines);
-  }
-
-  Widget buildStrokeToolbar() {
-    return Positioned(
-      bottom: 100.0,
-      right: 10.0,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          buildStrokeButton(5.0),
-          buildStrokeButton(10.0),
-          buildStrokeButton(15.0),
-        ],
-      ),
-    );
-  }
-
-  Widget buildStrokeButton(double strokeWidth) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedWidth = strokeWidth;
-        });
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(4.0),
-        child: Container(
-          width: strokeWidth * 2,
-          height: strokeWidth * 2,
-          decoration: BoxDecoration(
-            color: selectedColor,
-            borderRadius: BorderRadius.circular(50.0),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget buildColorToolbar() {
-    return Container(
-      alignment: Alignment.topRight,
-      child: MyColorPicker(
-        arrowOffset: 155,
-        radius: 14,
-        child: SizedBox(
-          width: 260,
-          //height: 180,
-          child: Container(
-            child: BlockPicker(
-              pickerColor: selectedColor,
-              layoutBuilder: _layoutBuilder,
-              itemBuilder: _itemBuilder,
-              onColorChanged: (color) => setState(() => selectedColor = color),
-            ),
-          ),
-        ),
-      ),
-    );
-    // child: MyColorPicker(
-    //   arrowOffset: 155,
-    //   radius: 14,
-    //   child: SizedBox(
-    //     width: 260,
-    //     height: 180,
-    //     child: Container(color: Colors.red, child: BlockPicker(
-    //   pickerColor: selectedColor,
-    //   onColorChanged: (color) => setState(() => selectedColor = color)))),
-    //   ),
-    // );
-  }
-
-  Widget buildColorButton(Color color) {
-    return Padding(
-      padding: const EdgeInsets.all(4.0),
-      child: FloatingActionButton(
-        mini: true,
-        backgroundColor: color,
-        child: Container(),
-        onPressed: () {
-          setState(() {
-            selectedColor = color;
-          });
-        },
-      ),
-    );
-  }
-
-  Widget buildSaveButton() {
-    return GestureDetector(
-      onTap: save,
-      child: Icon(Icons.check_outlined, size: 20.0, color: Colors.white),
-    );
-  }
-
-  Widget _layoutBuilder(
-    BuildContext context,
-    List<Color> colors,
-    PickerItem child,
-  ) {
-    Orientation orientation = MediaQuery.of(context).orientation;
-
-    return Container(
-      color: Colors.transparent,
-      width: 260,
-      height: orientation == Orientation.portrait ? 180 : 180,
-      child: GridView.count(
-        crossAxisCount: orientation == Orientation.portrait ? 7 : 10,
-        shrinkWrap: true,
-        crossAxisSpacing: 5,
-        mainAxisSpacing: 5,
-        children: [for (Color color in colors) child(color)],
-      ),
-    );
-  }
-
-  // Provide a shape for [BlockPicker].
-  Widget _itemBuilder(
-    Color color,
-    bool isCurrentColor,
-    void Function() changeColor,
-  ) {
-    return Container(
-      margin: const EdgeInsets.all(5),
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-        boxShadow: [
-          BoxShadow(
-            color: color.withAlpha(204),
-            offset: const Offset(1, 2),
-            blurRadius: 5,
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: changeColor,
-          borderRadius: BorderRadius.circular(20),
-          child: AnimatedOpacity(
-            duration: const Duration(milliseconds: 210),
-            opacity: isCurrentColor ? 1 : 0,
-            child: Icon(
-              Icons.done,
-              size: 20,
-              color: useWhiteForeground(color) ? Colors.white : Colors.black,
-            ),
-          ),
         ),
       ),
     );
