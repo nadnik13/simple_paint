@@ -10,22 +10,14 @@ abstract class ToolbarEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-// Событие экспорта изображения
 class ExportImageEvent extends ToolbarEvent {}
 
-// Событие вставки изображения
-class InsertImageEvent extends ToolbarEvent {}
-
-// Событие выбора кисти-карандаша
 class SelectPencilEvent extends ToolbarEvent {}
 
-// Событие выбора кисти-ластика
 class SelectEraserEvent extends ToolbarEvent {}
 
-// Событие переключения палитры
 class TogglePaletteEvent extends ToolbarEvent {}
 
-// Событие изменения цвета кисти
 class ChangeColorEvent extends ToolbarEvent {
   final Color color;
 
@@ -35,7 +27,6 @@ class ChangeColorEvent extends ToolbarEvent {
   List<Object?> get props => [color];
 }
 
-// Событие изменения толщины кисти
 class ChangeWidthEvent extends ToolbarEvent {
   final double width;
 
@@ -45,7 +36,6 @@ class ChangeWidthEvent extends ToolbarEvent {
   List<Object?> get props => [width];
 }
 
-// Событие обновления кисти
 class ChangeStrokePenTypeEvent extends ToolbarEvent {
   final PenType? penType;
 

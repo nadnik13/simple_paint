@@ -116,7 +116,7 @@ class ImageBloc extends Bloc<ImageEvent, ImageState> {
     final jsonString = jsonEncode(event.lines.map((l) => l.toJson()).toList());
     final linesBytes = Uint8List.fromList(utf8.encode(jsonString));
     final previewBytes = ImageService.compressAndResize(bytes);
-    print('_onSaveImage linesBytes: ${linesBytes.length}');
+    print('_onSaveImage previewBytes: ${previewBytes.length}');
     print('event.lines ${event.lines.length} linesBytes ${linesBytes.length}');
     try {
       final imageId = await _imageRepo.saveImage(

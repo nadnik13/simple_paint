@@ -11,9 +11,20 @@ class FireImageRepo {
   Future<Map<String, Uint8List>> downloadData(String imageId) async {
     final meta = await db.collection('images').doc(imageId).get();
     print('get meta');
-
     if (!meta.exists) {
       throw StateError('Image $imageId not found');
+    }
+    try {
+      final bgSnap =
+          await db
+              .collection('images')
+              .doc(imageId)
+              .collection('background')
+              .orderBy('index')
+              .get();
+      print('bgSnap: ${bgSnap.size}');
+    } catch (e) {
+      print('Error: $e');
     }
     final bgSnap =
         await db

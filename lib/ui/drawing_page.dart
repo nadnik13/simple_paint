@@ -48,31 +48,6 @@ class _DrawingPageState extends State<DrawingPage> {
     super.initState();
   }
 
-  Future<void> _onPressSaveButton(
-    String? imageId,
-    ui.Image background,
-    List<DrawnLine> lines,
-  ) async {
-    print('save image');
-
-    final image = await _getImageFromRenderObject();
-
-    print('lines: ${lines.length}');
-    if (context.mounted) {
-      context.read<ImageBloc>().add(
-        SaveImageEvent(
-          imageId: imageId,
-          image: image,
-          lines: lines,
-          background: background,
-        ),
-      );
-      print("saved: ${context.read<ImageBloc>().state}");
-      print("saved");
-      context.go('/gallery');
-    }
-  }
-
   // Future<void> export(ImageState imageState) async {
   //   print('save image');
   //   try {
@@ -168,9 +143,6 @@ class _DrawingPageState extends State<DrawingPage> {
                   isPaletteOpen: toolbarState.isPaletteOpen,
                   onPressedExport: () {
                     context.read<ToolbarBloc>().add(ExportImageEvent());
-                  },
-                  onPressedImage: () {
-                    context.read<ToolbarBloc>().add(InsertImageEvent());
                   },
                   onPressedPen: () {
                     context.read<ToolbarBloc>().add(SelectPencilEvent());

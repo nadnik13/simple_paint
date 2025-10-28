@@ -1,13 +1,15 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:image/image.dart' as img;
+import 'package:image_picker/image_picker.dart';
 
 class ImageService {
   static Uint8List compressAndResize(
     Uint8List bytes, {
-    int width = 300,
-    int quality = 80,
+    int width = 100,
+    int quality = 10,
   }) {
     final decoded = img.decodeImage(bytes)!;
     final resized = img.copyResize(decoded, width: width);
@@ -22,5 +24,12 @@ class ImageService {
     } else {
       return Uint8List(0);
     }
+  }
+
+  static Future<ui.Image> xFileToUiImage(XFile xfile) async {
+    final Uint8List bytes = await xfile.readAsBytes();
+    final ui.Codec codec = await ui.instantiateImageCodec(bytes);
+    final ui.FrameInfo frameInfo = await codec.getNextFrame();
+    return frameInfo.image;
   }
 }
