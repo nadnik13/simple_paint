@@ -149,6 +149,7 @@ class GalleryPage extends StatelessWidget {
         itemBuilder:
             (_, i) => GestureDetector(
               onTap: () async {
+                print('items[i].imageId = ${items[i].imageId}');
                 context.go('/gallery/draw', extra: items[i].imageId);
               },
               child: Container(

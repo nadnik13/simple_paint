@@ -3,19 +3,19 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:simple_paint/data/user_repo.dart';
 
-import '../data/fire_image_repo.dart';
+import '../data/gallery_repo.dart';
 import '../data/preview_item.dart';
 import 'gallery_event.dart';
 import 'gallery_state.dart';
 
 class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
-  final FireImageRepo _imageRepo;
+  final GalleryRepo _galleryRepo;
   final UserRepo _userRepo;
 
   StreamSubscription<List<ImageInfoItem>>? _imagesSubscription;
 
-  GalleryBloc({required FireImageRepo imageRepo, required UserRepo userRepo})
-    : _imageRepo = imageRepo,
+  GalleryBloc({required GalleryRepo galleryRepo, required UserRepo userRepo})
+    : _galleryRepo = galleryRepo,
       _userRepo = userRepo,
       super(GalleryInitialState()) {
     on<LoadGalleryEvent>(_onLoadUserImages);
@@ -52,7 +52,7 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
     print('Creating new stream subscription...');
     // Создаем новую подписку на стрим превью
     try {
-      final images = await _imageRepo.previews(_userRepo.userId);
+      final images = await _galleryRepo.getPreviews(_userRepo.userId);
 
       print('Stream received ${images.length} images');
 

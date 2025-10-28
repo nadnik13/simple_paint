@@ -1,13 +1,22 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:simple_paint/bloc/account_data_bloc.dart';
+import 'package:simple_paint/data/gallery_repo.dart';
 import 'package:simple_paint/ui/auth_page.dart';
 import 'package:simple_paint/ui/drawing_page.dart';
+import 'package:simple_paint/ui/gallery_page.dart';
 import 'package:simple_paint/ui/registration_page.dart';
 
+import 'bloc/canvas_bloc.dart';
+import 'bloc/gallery_bloc.dart';
+import 'bloc/image_bloc.dart';
+import 'bloc/toolbar_bloc.dart';
+import 'data/fire_image_repo.dart';
+import 'data/user_repo.dart';
 import 'firebase_options.dart';
 
 Future<void> main() async {
@@ -44,42 +53,41 @@ final GoRouter _router = GoRouter(
         ),
       ],
     ),
-
-    ShellRoute(
-      builder: (context, state, child) {
+    GoRoute(
+      path: '/gallery',
+      builder: (context, state) {
         final user = FirebaseAuth.instance.currentUser!;
         final userRepo = UserRepo(user.uid);
-        final imageRepo = FireImageRepo(FirebaseFirestore.instance);
-
-        return MultiBlocProvider(
-          providers: [
-            BlocProvider<GalleryBloc>(
-              create:
-                  (context) =>
-                      GalleryBloc(userRepo: userRepo, imageRepo: imageRepo),
-            ),
-            BlocProvider<ImageBloc>(
-              create:
-                  (context) =>
-                      ImageBloc(imageRepo: imageRepo, userRepo: userRepo),
-            ),
-          ],
-          child: child,
+        final galleryRepo = GalleryRepo(FirebaseFirestore.instance);
+        return BlocProvider<GalleryBloc>(
+          create:
+              (context) =>
+                  GalleryBloc(userRepo: userRepo, galleryRepo: galleryRepo),
+          child: const GalleryPage(),
         );
       },
       routes: [
         GoRoute(
-          path: '/gallery',
-          builder: (context, state) => const GalleryPage(),
-          routes: [
-            GoRoute(
-              path: '/draw',
-              builder: (context, state) {
-                final imageId = state.extra as String?;
-                return DrawingPageWrapper(imageId: imageId);
-              },
-            ),
-          ],
+          path: '/draw',
+          builder: (context, state) {
+            final imageId = state.extra as String?;
+            final imageRepo = FireImageRepo(FirebaseFirestore.instance);
+            print('imageId: ${imageId}');
+            final user = FirebaseAuth.instance.currentUser!;
+            final userRepo = UserRepo(user.uid);
+            return MultiBlocProvider(
+              providers: [
+                BlocProvider<ImageBloc>(
+                  create:
+                      (context) =>
+                          ImageBloc(imageRepo: imageRepo, userRepo: userRepo),
+                ),
+                BlocProvider<ToolbarBloc>(create: (context) => ToolbarBloc()),
+                BlocProvider<CanvasBloc>(create: (context) => CanvasBloc()),
+              ],
+              child: DrawingPage(imageId: imageId),
+            );
+          },
         ),
       ],
     ),
