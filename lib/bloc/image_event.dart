@@ -34,35 +34,12 @@ class SaveImageEvent extends ImageEvent {
   });
 
   @override
-  List<Object> get props => [image, lines, lines];
+  List<Object> get props {
+    final bg = background;
+    return bg != null ? [image, bg, lines, lines] : [image, lines, lines];
+  }
 }
 
 class CreateImageEvent extends ImageEvent {
   const CreateImageEvent();
-
-  @override
-  List<Object> get props => [];
-}
-
-class AddLineEvent extends ImageEvent {
-  const AddLineEvent();
-
-  @override
-  List<Object> get props => [];
-}
-
-class AddBackgroundEvent extends ImageEvent {
-  final ui.Image background;
-  const AddBackgroundEvent({required this.background});
-
-  @override
-  List<Object> get props => [background];
-}
-
-class UpdateLineEvent extends ImageEvent {
-  final DrawnLine line;
-  const UpdateLineEvent({required this.line});
-
-  @override
-  List<Object> get props => [line];
 }

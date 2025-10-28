@@ -20,7 +20,6 @@ class ToolbarState extends Equatable {
   List<Object?> get props => [strokePen, isPaletteOpen];
 }
 
-// Начальное состояние тулбара
 class ToolbarInitial extends ToolbarState {
   const ToolbarInitial()
     : super(

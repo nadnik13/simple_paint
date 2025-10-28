@@ -24,9 +24,6 @@ class ImageBloc extends Bloc<ImageEvent, ImageState> {
     on<LoadImageEvent>(_onLoadImage);
     on<CreateImageEvent>(_onCreateImage);
     on<SaveImageEvent>(_onSaveImage);
-    on<AddLineEvent>(_onAddLine);
-    on<UpdateLineEvent>(_onUpdateLine);
-    on<AddBackgroundEvent>(_onAddBackground);
   }
 
   Future<ui.Image?> _loadImageFromBytes(Uint8List? bytes) async {
@@ -51,6 +48,7 @@ class ImageBloc extends Bloc<ImageEvent, ImageState> {
   ) async {
     emit(ImageLoading());
 
+    print('ImageLoading');
     try {
       final downloadDataMap = await _imageRepo.downloadData(event.imageId);
 
@@ -58,6 +56,12 @@ class ImageBloc extends Bloc<ImageEvent, ImageState> {
         'downloadDataMap['
         'background'
         ']=${downloadDataMap['background']}',
+      );
+
+      print(
+        'lines['
+        'lines'
+        ']=${downloadDataMap['lines']}',
       );
       if (downloadDataMap['background'] != null &&
           downloadDataMap['lines'] != null) {
@@ -86,67 +90,46 @@ class ImageBloc extends Bloc<ImageEvent, ImageState> {
     emit(ImageLoading());
     String imageId = Uuid().v4();
     emit(
-      ImageLoaded(imageId: null, backgroundImage: null, lines: [], line: null),
+      ImageLoaded(
+        imageId: null,
+        backgroundImage: null,
+        lines: <DrawnLine>[],
+        line: null,
+      ),
     );
+    print('_onCreateImage ImageLoaded');
   }
 
   Future<void> _onSaveImage(
     SaveImageEvent event,
     Emitter<ImageState> emit,
   ) async {
-    print('_onSaveImage');
     emit(ImageSaving());
+    print('ImageSaving');
+    print('_onSaveImage lines: ${event.lines.length}');
 
     final Uint8List bytes = await ImageService.getBytes(event.image);
+    print('_onSaveImage bytes: ${bytes.length}');
     final Uint8List bgBytes = await ImageService.getBytes(event.background);
+    print('_onSaveImage bgBytes: ${bgBytes.length}');
+
     final jsonString = jsonEncode(event.lines.map((l) => l.toJson()).toList());
     final linesBytes = Uint8List.fromList(utf8.encode(jsonString));
-
+    final previewBytes = ImageService.compressAndResize(bytes);
+    print('_onSaveImage previewBytes: ${previewBytes.length}');
     print('event.lines ${event.lines.length} linesBytes ${linesBytes.length}');
     try {
       final imageId = await _imageRepo.saveImage(
         imageId: event.imageId,
         userId: _userRepo.userId,
         bgBytes: bgBytes,
-        previewBytes: ImageService.compressAndResize(bytes),
+        previewBytes: previewBytes,
         linesBytes: linesBytes,
       );
 
       emit(ImageSaved(imageId: imageId, message: 'Изображение сохранено'));
     } catch (e) {
       emit(ImageError(message: 'Ошибка сохранения изображения: $e'));
-    }
-  }
-
-  Future<void> _onAddLine(AddLineEvent event, Emitter<ImageState> emit) async {
-    final curState = state;
-    if (curState is ImageLoaded) {
-      final curLine = curState.line;
-      if (curLine != null) {
-        final updatedLines = List.of(curState.lines);
-        updatedLines.add(curLine);
-        emit(curState.copyWith(lines: updatedLines));
-      }
-    }
-  }
-
-  Future<void> _onUpdateLine(
-    UpdateLineEvent event,
-    Emitter<ImageState> emit,
-  ) async {
-    final curState = state;
-    if (curState is ImageLoaded) {
-      emit(curState.copyWith(line: event.line));
-    }
-  }
-
-  Future<void> _onAddBackground(
-    AddBackgroundEvent event,
-    Emitter<ImageState> emit,
-  ) async {
-    final curState = state;
-    if (curState is ImageLoaded) {
-      emit(curState.copyWith(backgroundImage: event.background));
     }
   }
 }

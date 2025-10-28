@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:simple_paint/bloc/gallery_bloc.dart';
+import 'package:simple_paint/bloc/canvas_bloc.dart';
 import 'package:simple_paint/bloc/image_bloc.dart';
 import 'package:simple_paint/bloc/toolbar_bloc.dart';
 import 'package:simple_paint/bloc/toolbar_event.dart';
@@ -16,23 +16,9 @@ import 'package:simple_paint/ui/widgets/drawing_area.dart';
 import 'package:simple_paint/ui/widgets/scaffold_with_background.dart';
 import 'package:simple_paint/ui/widgets/tool_bar.dart';
 
-import '../bloc/gallery_event.dart';
+import '../bloc/canvas_state.dart';
 import '../bloc/image_event.dart';
 import '../bloc/image_state.dart';
-
-class DrawingPageWrapper extends StatelessWidget {
-  final String? imageId;
-
-  const DrawingPageWrapper({super.key, required this.imageId});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocProvider<ToolbarBloc>(
-      create: (context) => ToolbarBloc(),
-      child: DrawingPage(imageId: imageId),
-    );
-  }
-}
 
 class DrawingPage extends StatefulWidget {
   final String? imageId;
@@ -59,34 +45,7 @@ class _DrawingPageState extends State<DrawingPage> {
     context.read<ImageBloc>().add(
       (imageId != null) ? LoadImageEvent(imageId: imageId) : CreateImageEvent(),
     );
-
     super.initState();
-  }
-
-  Future<void> _onPressSaveButton(
-    String? imageId,
-    ui.Image background,
-    List<DrawnLine> lines,
-  ) async {
-    print('save image');
-
-    final image = await _getImageFromRenderObject();
-
-    print('lines: ${lines.length}');
-    if (context.mounted) {
-      context.read<ImageBloc>().add(
-        SaveImageEvent(
-          imageId: imageId,
-          image: image,
-          lines: lines,
-          background: background,
-        ),
-      );
-      print("saved: ${context.read<ImageBloc>().state}");
-      print("saved");
-      context.read<GalleryBloc>().add(RefreshGalleryEvent());
-      context.go('/gallery');
-    }
   }
 
   // Future<void> export(ImageState imageState) async {
@@ -135,7 +94,6 @@ class _DrawingPageState extends State<DrawingPage> {
       );
       print("saved: ${context.read<ImageBloc>().state}");
       print("saved");
-      context.read<GalleryBloc>().add(RefreshGalleryEvent());
       context.go('/gallery');
     }
     ;
@@ -143,7 +101,7 @@ class _DrawingPageState extends State<DrawingPage> {
 
   @override
   Widget build(BuildContext context) {
-    print('imageState: ${context.read<ImageBloc>().state}');
+    print('imageState: ${context.watch<ImageBloc>().state}');
     return ScaffoldWithBackground(
       appBar: AppBar(
         backgroundColor: Color(0x1AC4C4C4),
@@ -159,18 +117,15 @@ class _DrawingPageState extends State<DrawingPage> {
           style: TextStyle(color: Colors.white),
         ),
         actions: [
-          BlocBuilder<ImageBloc, ImageState>(
-            builder: (context, imageState) {
+          BlocBuilder<CanvasBloc, CanvasState>(
+            builder: (context, canvasState) {
               return IconButton(
                 onPressed:
-                    () =>
-                        (imageState is ImageLoaded)
-                            ? _onPressedSaveButton(
-                              imageState.imageId,
-                              imageState.backgroundImage,
-                              imageState.lines,
-                            )
-                            : null,
+                    () => _onPressedSaveButton(
+                      widget.imageId,
+                      canvasState.backgroundImage,
+                      canvasState.lines,
+                    ),
                 icon: Image.asset('assets/save.png'),
               );
             },
@@ -189,9 +144,6 @@ class _DrawingPageState extends State<DrawingPage> {
                   onPressedExport: () {
                     context.read<ToolbarBloc>().add(ExportImageEvent());
                   },
-                  onPressedImage: () {
-                    context.read<ToolbarBloc>().add(InsertImageEvent());
-                  },
                   onPressedPen: () {
                     context.read<ToolbarBloc>().add(SelectPencilEvent());
                   },
@@ -206,7 +158,25 @@ class _DrawingPageState extends State<DrawingPage> {
                 Expanded(
                   child: Stack(
                     children: [
-                      DrawingArea(canvasKey: _repainBoundaryGlobalKey),
+                      BlocBuilder<ImageBloc, ImageState>(
+                        builder: (context, imageState) {
+                          if (imageState is ImageError) {
+                            return Center(child: Text(imageState.message));
+                          }
+                          if (imageState is ImageSaved) {
+                            return Center(child: Text(imageState.message));
+                          }
+                          if (imageState is ImageLoaded) {
+                            print('imageState: ${imageState.lines.isNotEmpty}');
+                            return DrawingArea(
+                              canvasKey: _repainBoundaryGlobalKey,
+                              lines: imageState.lines,
+                              background: imageState.backgroundImage,
+                            );
+                          }
+                          return Center(child: CircularProgressIndicator());
+                        },
+                      ),
                       if (toolbarState.isPaletteOpen) ColorPalette(),
                     ],
                   ),

@@ -74,12 +74,17 @@ class Sketcher extends CustomPainter {
 
 class CombinedSketcher extends CustomPainter {
   final List<DrawnLine> lines;
+  final DrawnLine? line;
   final ui.Image? background;
 
-  CombinedSketcher({required this.lines, this.background});
+  CombinedSketcher({required this.lines, required this.line, this.background});
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.drawLine(Offset(10, 10), Offset(1000, 1000), Paint());
+    print('CombinedSketcher lines: ${lines.length} ');
+    print('CombinedSketcher line: ${line?.path.length} ');
+
     canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
     if (background != null) {
       canvas.drawImage(
@@ -107,12 +112,21 @@ class CombinedSketcher extends CustomPainter {
           ..strokeJoin = StrokeJoin.round
           ..strokeWidth = 5.0;
 
+    final lastLine = line;
+    if (lastLine != null && lastLine.path.isNotEmpty) {
+      if (lines.isNotEmpty) lines.removeLast();
+      lines.add(lastLine);
+    }
+
     for (int i = 0; i < lines.length; ++i) {
       final line = lines[i];
+      print('pathi $i line.path.length ${line.path.length}');
       for (int j = 0; j < line.path.length - 1; ++j) {
+        print('pathi $i line.path.length ${line.path.length}');
         final pathJ = line.path[j];
         final pathJJ = line.path[j + 1];
         if (pathJ != null && pathJJ != null) {
+          print('pathJ ${pathJ} pathJJ ${pathJJ}');
           final paint =
               basePaint
                 ..color = line.color

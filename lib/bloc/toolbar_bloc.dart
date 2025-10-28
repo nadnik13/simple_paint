@@ -7,7 +7,6 @@ import 'toolbar_state.dart';
 class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
   ToolbarBloc() : super(ToolbarInitial()) {
     on<ExportImageEvent>(_onExportImage);
-    on<InsertImageEvent>(_onInsertImage);
     on<SelectPencilEvent>(_onSelectPencil);
     on<SelectEraserEvent>(_onSelectEraser);
     on<TogglePaletteEvent>(_onTogglePalette);
@@ -20,12 +19,6 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
     // Логика экспорта изображения будет обрабатываться в UI
     // Здесь можно добавить дополнительную логику если нужно
     print('Экспорт изображения');
-  }
-
-  void _onInsertImage(InsertImageEvent event, Emitter<ToolbarState> emit) {
-    // Логика вставки изображения будет обрабатываться в UI
-    // Здесь можно добавить дополнительную логику если нужно
-    print('Вставка изображения');
   }
 
   void _onSelectPencil(SelectPencilEvent event, Emitter<ToolbarState> emit) {

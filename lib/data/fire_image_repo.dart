@@ -1,7 +1,6 @@
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:simple_paint/data/preview_item.dart';
 
 class FireImageRepo {
   final FirebaseFirestore db;
@@ -9,68 +8,23 @@ class FireImageRepo {
 
   FireImageRepo(this.db);
 
-  Future<List<ImageInfoItem>> previews(String userId) async {
-    print('FireImageRepo.previews() called for userId: $userId');
-
-    if (userId.isEmpty) {
-      print('Error: userId is empty');
-      return Future.error('User ID cannot be empty');
-    }
-
-    try {
-      print('Creating Firestore query...');
-      final querySnapshot =
-          await db
-              .collection('preview_images')
-              .where('userId', isEqualTo: userId)
-              .get();
-
-      print('Received snapshot with ${querySnapshot.docs.length} documents');
-
-      final items = <ImageInfoItem>[];
-      for (final doc in querySnapshot.docs) {
-        try {
-          final item = ImageInfoItem.fromDoc(doc);
-          items.add(item);
-          print('Successfully parsed document: ${doc.id}');
-        } catch (e) {
-          print('Error parsing document ${doc.id}: $e');
-          continue;
-        }
-      }
-      //:TODO доделать
-      items.sort((a, b) {
-        if (a.updatedAt != null && b.updatedAt != null) {
-          return b.updatedAt!.compareTo(a.updatedAt!);
-        }
-        if (a.updatedAt != null && b.createdAt == null) {
-          throw Exception('a.updatedAt != null && b.createdAt == null');
-          return -1;
-        }
-        if (a.updatedAt == null && b.updatedAt != null) {
-          throw Exception('a.updatedAt == null && b.updatedAt != null');
-          return 1;
-        }
-        if (a.createdAt != null && b.createdAt != null) {
-          return b.createdAt!.compareTo(a.createdAt!);
-        }
-        return b.imageId.compareTo(a.imageId);
-      });
-
-      print('Returning ${items.length} valid items (sorted on client)');
-      return items;
-    } catch (e) {
-      print('Error creating previews stream: $e');
-      return Future.error('Failed to create previews stream: $e');
-    }
-  }
-
   Future<Map<String, Uint8List>> downloadData(String imageId) async {
     final meta = await db.collection('images').doc(imageId).get();
     print('get meta');
-
     if (!meta.exists) {
       throw StateError('Image $imageId not found');
+    }
+    try {
+      final bgSnap =
+          await db
+              .collection('images')
+              .doc(imageId)
+              .collection('background')
+              .orderBy('index')
+              .get();
+      print('bgSnap: ${bgSnap.size}');
+    } catch (e) {
+      print('Error: $e');
     }
     final bgSnap =
         await db

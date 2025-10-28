@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:simple_paint/ui/widgets/tool_bar_icon_button.dart';
 
 import '../../data/stroke_pen.dart';
+import '../../services/image_picker_button.dart';
 
 class Toolbar extends StatelessWidget {
   final VoidCallback onPressedExport;
-  final VoidCallback onPressedImage;
   final VoidCallback onPressedPen;
   final VoidCallback onPressedErase;
   final VoidCallback onPressedColorLens;
@@ -15,7 +15,6 @@ class Toolbar extends StatelessWidget {
   const Toolbar({
     super.key,
     required this.onPressedExport,
-    required this.onPressedImage,
     required this.onPressedPen,
     required this.onPressedErase,
     required this.onPressedColorLens,
@@ -34,10 +33,7 @@ class Toolbar extends StatelessWidget {
           onPressed: onPressedExport,
         ),
 
-        ToolBarIconButton(
-          icon: Image.asset('assets/image.png'),
-          onPressed: onPressedImage,
-        ),
+        ImagePickerButton(),
 
         ToolBarIconButton(
           icon: Image.asset('assets/pen.png'),
