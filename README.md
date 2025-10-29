@@ -1,16 +1,55 @@
-# simple_paint
+# Simple Paint
 
-A new Flutter project.
+Приложение для рисования на Flutter с синхронизацией через Firebase.
 
-## Getting Started
+## Архитектура
 
-This project is a starting point for a Flutter application.
+Приложение построено на **Clean Architecture** с использованием паттерна **BLoC** для управления состоянием:
 
-A few resources to get you started if this is your first Flutter project:
+- **UI Layer** (`lib/ui/`) - экраны и виджеты
+- **BLoC Layer** (`lib/bloc/`) - управление состоянием
+- **Data Layer** (`lib/data/`) - репозитории и модели данных
+- **Services Layer** (`lib/services/`) - бизнес-логика рисования
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Основные экраны
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- **AuthPage** - авторизация пользователя
+- **RegistrationPage** - регистрация нового пользователя  
+- **GalleryPage** - галерея сохраненных рисунков
+- **DrawingPage** - холст для рисования
+
+## Технологии
+
+### Frontend
+- **Flutter** - кроссплатформенная разработка
+- **flutter_bloc** - управление состоянием
+- **go_router** - навигация
+- **flutter_colorpicker** - выбор цветов
+- **image** - обработка изображений
+
+### Backend
+- **Firebase Auth** - аутентификация
+- **Cloud Firestore** - база данных
+- **Firebase Storage** - хранение изображений (через чанки)
+
+### Дополнительные возможности
+- **share_plus** - поделиться рисунком
+- **flutter_local_notifications** - уведомления
+- **image_picker** - загрузка изображений
+- **path_provider** - работа с файловой системой
+
+## Основные BLoC'и
+
+- **AccountDataBloc** - управление аутентификацией
+- **GalleryBloc** - управление галереей рисунков
+- **ImageBloc** - загрузка и отображение изображений
+- **CanvasBloc** - состояние холста
+- **ToolbarBloc** - инструменты рисования
+- **ImageSaveBloc** - сохранение рисунков
+
+## Особенности реализации
+
+- Изображения сохраняются в Firestore по частям (чанками) для обхода лимитов размера документа
+- Отдельное хранение фоновых изображений и линий рисования для возможности редактирования проекта при повторном открытии
+- Кастомные рендереры для отрисовки (`BackgroundSketcher`, `LinesSketcher`)
+- Поддержка различных инструментов рисования (кисть, ластик)
