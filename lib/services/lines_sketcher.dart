@@ -1,35 +1,14 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/material.dart';
 
 import '../data/drawn_line.dart';
 
-class CombinedSketcher extends CustomPainter {
+class LinesSketcher extends CustomPainter {
   final List<DrawnLine> lines;
-  final DrawnLine? line;
-  final ui.Image? background;
 
-  CombinedSketcher({required this.lines, required this.line, this.background});
+  LinesSketcher({required this.lines});
 
   @override
   void paint(Canvas canvas, Size size) {
-    canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
-    if (background != null) {
-      canvas.drawImage(
-        background!,
-        Offset.zero,
-        Paint()..style = PaintingStyle.fill,
-      );
-    } else {
-      final whitePaint =
-          Paint()
-            ..color = Colors.white
-            ..style = PaintingStyle.fill;
-      canvas.drawRRect(
-        RRect.fromLTRBR(0, 0, size.width, size.height, Radius.circular(20)),
-        whitePaint,
-      );
-    }
     canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
 
     Paint basePaint =
@@ -38,12 +17,6 @@ class CombinedSketcher extends CustomPainter {
           ..strokeCap = StrokeCap.round
           ..strokeJoin = StrokeJoin.round
           ..strokeWidth = 5.0;
-
-    final lastLine = line;
-    if (lastLine != null && lastLine.path.isNotEmpty) {
-      if (lines.isNotEmpty) lines.removeLast();
-      lines.add(lastLine);
-    }
 
     for (int i = 0; i < lines.length; ++i) {
       final line = lines[i];
@@ -61,11 +34,10 @@ class CombinedSketcher extends CustomPainter {
       }
     }
     canvas.restore();
-    canvas.restore();
   }
 
   @override
-  bool shouldRepaint(CombinedSketcher oldDelegate) {
+  bool shouldRepaint(LinesSketcher oldDelegate) {
     return true;
   }
 }

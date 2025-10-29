@@ -33,18 +33,11 @@ class AddLinesEvent extends CanvasEvent {
 }
 
 class AddLineEvent extends CanvasEvent {
-  const AddLineEvent();
+  final DrawnLine line;
+  const AddLineEvent({required this.line});
 
   @override
   List<Object> get props => [];
-}
-
-class UpdateLineEvent extends CanvasEvent {
-  final DrawnLine line;
-  const UpdateLineEvent({required this.line});
-
-  @override
-  List<Object> get props => [line];
 }
 
 class AddBackgroundEvent extends CanvasEvent {

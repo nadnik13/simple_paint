@@ -31,7 +31,7 @@ class DrawnLine extends Equatable {
   static _getBlendMode(PenType type) {
     switch (type) {
       case PenType.eraser:
-        return BlendMode.dstOut;
+        return BlendMode.clear;
       case PenType.pencil:
         return BlendMode.srcOver;
     }

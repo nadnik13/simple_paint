@@ -10,7 +10,7 @@ class MyColorPicker extends StatelessWidget {
     this.radius = 16,
     this.arrowWidth = 18,
     this.arrowHeight = 12,
-    this.arrowOffset = 24, // смещение носика от левого края
+    this.arrowOffset = 24,
     this.padding = const EdgeInsets.all(12),
   });
 
@@ -37,12 +37,11 @@ class MyColorPicker extends StatelessWidget {
         arrowOffset: arrowOffset,
       ),
       child: Padding(
-        // Добавим паддинги и место для носика сверху
         padding: EdgeInsets.fromLTRB(
           padding.left,
-          padding.top + arrowHeight,
+          2 + arrowHeight,
           padding.right,
-          padding.bottom,
+          0,
         ),
         child: child,
       ),
@@ -75,43 +74,36 @@ class _BubblePainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Основной путь: скруглённый прямоугольник + носик (сверху)
     final path = Path();
-    final bodyTop = arrowH; // место под носик
-    // Начинаем сверху-слева
+    final bodyTop = arrowH;
+
     path.moveTo(r, bodyTop);
-    // Верхняя кромка до носика
     final arrowLeft = (arrowOffset).clamp(r, w - r - arrowW);
     final arrowRight = arrowLeft + arrowW;
 
     path.lineTo(arrowLeft, bodyTop);
-    // Носик: плавный острый треугольник (можно сделать чуть скруглённым)
     path.lineTo(arrowLeft + arrowW / 2, 0);
     path.lineTo(arrowRight, bodyTop);
 
-    // Верхняя кромка до правого скругления
     path.lineTo(w - r, bodyTop);
     path.quadraticBezierTo(w, bodyTop, w, bodyTop + r);
-    // Правая сторона
     path.lineTo(w, h - r);
     path.quadraticBezierTo(w, h, w - r, h);
-    // Низ
+
     path.lineTo(r, h);
     path.quadraticBezierTo(0, h, 0, h - r);
-    // Левая сторона
+
     path.lineTo(0, bodyTop + r);
     path.quadraticBezierTo(0, bodyTop, r, bodyTop);
     path.close();
 
-    // Тень
     if (elevation > 0) {
       canvas.drawShadow(path, Colors.black.withAlpha(153), elevation, true);
     }
-    // Заливка
+
     final fill = Paint()..color = color;
     canvas.drawPath(path, fill);
 
-    // Обводка (тонкая, как на макете)
     final stroke =
         Paint()
           ..style = PaintingStyle.stroke

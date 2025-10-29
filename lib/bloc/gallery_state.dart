@@ -15,12 +15,11 @@ class GalleryLoadingState extends GalleryState {}
 
 class GalleryLoadedState extends GalleryState {
   final List<ImageInfoItem> images;
-  final String userId;
 
-  const GalleryLoadedState({required this.images, required this.userId});
+  const GalleryLoadedState({required this.images});
 
   @override
-  List<Object?> get props => [images, userId];
+  List<Object?> get props => [images];
 }
 
 class GalleryIsEmpty extends GalleryState {

@@ -17,20 +17,17 @@ class ImageInfoItem {
   final DateTime? updatedAt;
 
   factory ImageInfoItem.fromDoc(DocumentSnapshot d) {
-    print('ImageInfoItem.fromDoc for document: ${d.id}');
-
     if (!d.exists) {
-      throw StateError('Document ${d.id} does not exist');
+      throw StateError('Изображение ${d.id} не существует');
     }
 
     final data = d.data();
     if (data == null) {
-      throw StateError('Document ${d.id} has null data');
+      throw StateError('У изображения ${d.id} нет данных');
     }
 
     final m = data as Map<String, dynamic>;
 
-    // Проверяем наличие всех обязательных полей
     final imageId = m['imageId'];
     final userId = m['userId'];
     final thumb = m['thumb'];
@@ -38,16 +35,16 @@ class ImageInfoItem {
     final updatedAt = m['updatedAt'];
 
     if (imageId == null || imageId is! String || imageId.isEmpty) {
-      throw StateError('Document ${d.id} has invalid imageId: $imageId');
+      throw StateError('У изображения ${d.id} некорретный imageId $imageId');
     }
 
     if (userId == null || userId is! String || userId.isEmpty) {
-      throw StateError('Document ${d.id} has invalid userId: $userId');
+      throw StateError('У изображения ${d.id} некорретный userId: $userId');
     }
 
     if (thumb == null || thumb is! List || thumb.isEmpty) {
       throw StateError(
-        'Document ${d.id} has invalid thumb data: ${thumb.runtimeType}',
+        'У изображения ${d.id} некорретный preview: ${thumb.runtimeType}',
       );
     }
 
@@ -63,16 +60,11 @@ class ImageInfoItem {
     DateTime? parsedUpdatedAt;
     if (updatedAt != null) {
       if (updatedAt is Timestamp) {
-        print('parsedUpdatedAt createdAt is Timestamp');
         parsedCreatedAt = updatedAt.toDate();
       } else if (updatedAt is DateTime) {
-        print('parsedUpdatedAt createdAt is DateTime');
         parsedCreatedAt = updatedAt;
       }
     }
-    print(
-      'Successfully parsed document ${d.id} with imageId: $imageId, createdAt: $parsedCreatedAt',
-    );
     return ImageInfoItem(
       imageId: imageId,
       userId: userId,

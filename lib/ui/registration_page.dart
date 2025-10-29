@@ -23,11 +23,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  // Переменные состояния
   String _name = '';
   String _email = '';
   String _password = '';
   String _confirmPassword = '';
+  String? _confirmationPasswordError;
 
   @override
   void initState() {
@@ -50,6 +50,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
     _confirmPasswordController.addListener(() {
       setState(() {
         _confirmPassword = _confirmPasswordController.text;
+        if (_confirmPassword.isNotEmpty && _confirmPassword != _password) {
+          _confirmationPasswordError = 'Пароли не совпадают';
+        } else {
+          _confirmationPasswordError = null;
+        }
       });
     });
   }
@@ -146,6 +151,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           hintText: '8-16 символов',
                           controller: _confirmPasswordController,
                           obscureText: true,
+                          errorText: _confirmationPasswordError,
                         ),
                       ],
                     ),

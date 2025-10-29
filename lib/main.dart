@@ -10,10 +10,12 @@ import 'package:simple_paint/ui/auth_page.dart';
 import 'package:simple_paint/ui/drawing_page.dart';
 import 'package:simple_paint/ui/gallery_page.dart';
 import 'package:simple_paint/ui/registration_page.dart';
+import 'package:simple_paint/utils/notification_helper.dart';
 
 import 'bloc/canvas_bloc.dart';
 import 'bloc/gallery_bloc.dart';
 import 'bloc/image_bloc.dart';
+import 'bloc/image_save_bloc.dart';
 import 'bloc/toolbar_bloc.dart';
 import 'data/fire_image_repo.dart';
 import 'data/user_repo.dart';
@@ -72,15 +74,19 @@ final GoRouter _router = GoRouter(
           builder: (context, state) {
             final imageId = state.extra as String?;
             final imageRepo = FireImageRepo(FirebaseFirestore.instance);
-            print('imageId: ${imageId}');
             final user = FirebaseAuth.instance.currentUser!;
             final userRepo = UserRepo(user.uid);
             return MultiBlocProvider(
               providers: [
                 BlocProvider<ImageBloc>(
+                  create: (context) => ImageBloc(imageRepo: imageRepo),
+                ),
+                BlocProvider<ImageSaveBloc>(
                   create:
-                      (context) =>
-                          ImageBloc(imageRepo: imageRepo, userRepo: userRepo),
+                      (context) => ImageSaveBloc(
+                        imageRepo: imageRepo,
+                        userRepo: userRepo,
+                      ),
                 ),
                 BlocProvider<ToolbarBloc>(create: (context) => ToolbarBloc()),
                 BlocProvider<CanvasBloc>(create: (context) => CanvasBloc()),
@@ -94,8 +100,19 @@ final GoRouter _router = GoRouter(
   ],
 );
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    NotificationHelper.init();
+  }
 
   @override
   Widget build(BuildContext context) {

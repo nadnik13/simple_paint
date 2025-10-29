@@ -18,6 +18,8 @@ class SelectEraserEvent extends ToolbarEvent {}
 
 class TogglePaletteEvent extends ToolbarEvent {}
 
+class ToggleWidthPickerEvent extends ToolbarEvent {}
+
 class ChangeColorEvent extends ToolbarEvent {
   final Color color;
 

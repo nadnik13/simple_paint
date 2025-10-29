@@ -1,82 +1,91 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:simple_paint/bloc/account_data_event.dart';
 import 'package:simple_paint/bloc/gallery_bloc.dart';
 import 'package:simple_paint/bloc/gallery_event.dart';
 import 'package:simple_paint/bloc/gallery_state.dart';
 import 'package:simple_paint/data/preview_item.dart';
+import 'package:simple_paint/ui/widgets/custom_button.dart';
 import 'package:simple_paint/ui/widgets/scaffold_with_background.dart';
 
 import '../bloc/account_data_bloc.dart';
+import '../bloc/account_data_event.dart';
 import '../bloc/account_data_state.dart';
 
-class GalleryPage extends StatelessWidget {
+class GalleryPage extends StatefulWidget {
   const GalleryPage({super.key});
 
   @override
+  State<GalleryPage> createState() => _GalleryPageState();
+}
+
+class _GalleryPageState extends State<GalleryPage> {
+  late final GalleryBloc _galleryBloc;
+  @override
+  void initState() {
+    super.initState();
+    _galleryBloc = context.read<GalleryBloc>()..add(LoadGalleryEvent());
+  }
+
+  @override
+  void dispose() {
+    _galleryBloc.add(ClearGalleryEvent());
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ScaffoldWithBackground(
-      appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          icon: Image.asset('assets/logout.png'),
-          onPressed: () {
-            context.read<AccountDataBloc>().add(LogoutEvent());
-            context.read<GalleryBloc>().add(ClearGalleryEvent());
-            context.go('/auth');
-          },
-        ),
-        title: Text('Галерея', style: TextStyle(color: Color(0xEEEEEEEE))),
-        actions: [
-          IconButton(
-            onPressed: () {
-              context.go('/gallery/draw', extra: null);
-            },
-            icon: Image.asset('assets/draw.png'),
+    return BlocBuilder<GalleryBloc, GalleryState>(
+      builder: (context, state) {
+        if (state is GalleryLoadingState) {
+          return ScaffoldWithBackground(
+            child: const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 16),
+                  Text(
+                    'Изображение загружается...',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        return ScaffoldWithBackground(
+          appBar: AppBar(
+            centerTitle: true,
+            backgroundColor: Colors.transparent,
+            leading: IconButton(
+              icon: Image.asset('assets/logout.png'),
+              onPressed: () {
+                context.read<AccountDataBloc>().add(LogoutEvent());
+                context.go('/auth');
+              },
+            ),
+            title: Text('Галерея', style: TextStyle(color: Color(0xEEEEEEEE))),
+            actions: [
+              if (state is! GalleryIsEmpty)
+                IconButton(
+                  onPressed: () async {
+                    await context.push('/gallery/draw', extra: null);
+                    context.read<GalleryBloc>().add(RefreshGalleryEvent());
+                  },
+                  icon: Image.asset('assets/draw.png'),
+                ),
+            ],
           ),
-        ],
-      ),
-      child: BlocListener<AccountDataBloc, AccountDataState>(
-        listener: (context, accountState) {
-          print('AccountDataBloc state changed: ${accountState.runtimeType}');
-          if (accountState is AccountDataAuthenticated) {
-            context.read<GalleryBloc>().add(LoadGalleryEvent());
-          } else if (accountState is AccountDataUnauthenticated) {
-            context.read<GalleryBloc>().add(ClearGalleryEvent());
-          }
-        },
-        child: BlocBuilder<GalleryBloc, GalleryState>(
-          builder: (context, state) {
-            return _buildContent(context, state);
-          },
-        ),
-      ),
+          child: _buildContent(context, state),
+        );
+      },
     );
   }
 
   Widget _buildContent(BuildContext context, GalleryState state) {
-    if (state is GalleryInitialState) {
-      context.read<GalleryBloc>().add(LoadGalleryEvent());
-    }
-    if (state is GalleryLoadingState) {
-      print('Showing loading state');
-      return const Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text(
-              'Загружаем ваши изображения...',
-              style: TextStyle(fontSize: 16),
-            ),
-          ],
-        ),
-      );
-    }
-
     if (state is GalleryLoadingError) {
       return Center(
         child: Column(
@@ -105,23 +114,23 @@ class GalleryPage extends StatelessWidget {
     }
 
     if (state is GalleryIsEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.image_outlined, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              'У вас пока нет сохраненных изображений',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16),
-            ),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: () => context.go('/gallery/draw'),
-              child: Text('Создать первый рисунок'),
-            ),
-          ],
+      return SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              CustomButton(
+                title: 'Создать',
+                isDark: true,
+                onPressed: () async {
+                  await context.push('/gallery/draw', extra: null);
+                  context.read<GalleryBloc>().add(RefreshGalleryEvent());
+                },
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -136,7 +145,11 @@ class GalleryPage extends StatelessWidget {
   Widget _buildImageGrid(BuildContext context, List<ImageInfoItem> items) {
     return RefreshIndicator(
       onRefresh: () async {
-        context.read<GalleryBloc>().add(RefreshGalleryEvent());
+        final completer = Completer();
+        context.read<GalleryBloc>().add(
+          RefreshGalleryEvent(completer: completer),
+        );
+        return completer.future;
       },
       child: GridView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 46),
@@ -149,8 +162,8 @@ class GalleryPage extends StatelessWidget {
         itemBuilder:
             (_, i) => GestureDetector(
               onTap: () async {
-                print('items[i].imageId = ${items[i].imageId}');
-                context.go('/gallery/draw', extra: items[i].imageId);
+                await context.push('/gallery/draw', extra: items[i].imageId);
+                context.read<GalleryBloc>().add(RefreshGalleryEvent());
               },
               child: Container(
                 decoration: BoxDecoration(

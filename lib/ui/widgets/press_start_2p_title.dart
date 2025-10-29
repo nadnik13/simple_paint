@@ -10,7 +10,6 @@ class PressStart2PTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // Обводка с градиентом
         ShaderMask(
           shaderCallback:
               (bounds) => LinearGradient(
@@ -32,7 +31,6 @@ class PressStart2PTitle extends StatelessWidget {
             ),
           ),
         ),
-        // Основной текст
         Text(
           text,
           textAlign: TextAlign.start,

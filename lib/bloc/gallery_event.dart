@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:equatable/equatable.dart';
 
 abstract class GalleryEvent extends Equatable {
@@ -15,7 +17,8 @@ class LoadGalleryEvent extends GalleryEvent {
 }
 
 class RefreshGalleryEvent extends GalleryEvent {
-  const RefreshGalleryEvent();
+  final Completer? completer;
+  const RefreshGalleryEvent({this.completer});
 
   @override
   List<Object> get props => [];
