@@ -60,9 +60,6 @@ class _AuthPageState extends State<AuthPage> {
                   context,
                 ).showSnackBar(SnackBar(content: Text(state.message)));
               } else if (state is AccountDataAuthenticated) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(const SnackBar(content: Text('Успешный вход!')));
                 context.go('/gallery');
               }
             },
@@ -78,7 +75,6 @@ class _AuthPageState extends State<AuthPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         PressStart2PTitle(text: 'Вход'),
-                        //SizedBox(height: 20),
                         CustomFormField(
                           label: 'e-mail',
                           hintText: 'Введите электронную почту',

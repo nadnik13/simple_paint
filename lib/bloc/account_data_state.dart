@@ -12,6 +12,15 @@ class AccountDataInitial extends AccountDataState {}
 
 class AccountDataLoading extends AccountDataState {}
 
+class AccountDataCreated extends AccountDataState {
+  final User user;
+
+  const AccountDataCreated({required this.user});
+
+  @override
+  List<Object?> get props => [user];
+}
+
 class AccountDataAuthenticated extends AccountDataState {
   final User user;
 

@@ -27,7 +27,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
   String _email = '';
   String _password = '';
   String _confirmPassword = '';
-  String? _confirmationPasswordError;
+  
+  // Ошибки для каждого поля
+  String? _nameError;
+  String? _emailError;
+  String? _passwordError;
+  String? _confirmPasswordError;
 
   @override
   void initState() {
@@ -35,26 +40,32 @@ class _RegistrationPageState extends State<RegistrationPage> {
     _nameController.addListener(() {
       setState(() {
         _name = _nameController.text;
+        _nameError = FormValidator.validateName(_name);
       });
     });
+    
     _emailController.addListener(() {
       setState(() {
         _email = _emailController.text;
+        _emailError = FormValidator.validateEmail(_email);
       });
     });
+    
     _passwordController.addListener(() {
       setState(() {
         _password = _passwordController.text;
+        _passwordError = FormValidator.validatePassword(_password);
+        // Перепроверяем подтверждение пароля при изменении основного пароля
+        if (_confirmPassword.isNotEmpty) {
+          _confirmPasswordError = FormValidator.validateConfirmPassword(_password, _confirmPassword);
+        }
       });
     });
+    
     _confirmPasswordController.addListener(() {
       setState(() {
         _confirmPassword = _confirmPasswordController.text;
-        if (_confirmPassword.isNotEmpty && _confirmPassword != _password) {
-          _confirmationPasswordError = 'Пароли не совпадают';
-        } else {
-          _confirmationPasswordError = null;
-        }
+        _confirmPasswordError = FormValidator.validateConfirmPassword(_password, _confirmPassword);
       });
     });
   }
@@ -76,16 +87,20 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   void _register() {
-    final error = FormValidator.validateRegistrationForm(
-      _name,
-      _email,
-      _password,
-      _confirmPassword,
-    );
-    if (error != null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(error)));
+    // Финальная проверка перед отправкой
+    final nameError = FormValidator.validateName(_name);
+    final emailError = FormValidator.validateEmail(_email);
+    final passwordError = FormValidator.validatePassword(_password);
+    final confirmPasswordError = FormValidator.validateConfirmPassword(_password, _confirmPassword);
+
+    if (nameError != null || emailError != null || passwordError != null || confirmPasswordError != null) {
+      // Обновляем состояние с ошибками
+      setState(() {
+        _nameError = nameError;
+        _emailError = emailError;
+        _passwordError = passwordError;
+        _confirmPasswordError = confirmPasswordError;
+      });
       return;
     }
 
@@ -111,7 +126,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 ScaffoldMessenger.of(
                   context,
                 ).showSnackBar(SnackBar(content: Text(state.message)));
-              } else if (state is AccountDataAuthenticated) {
+              } else if (state is AccountDataCreated) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Успешная регистрация!')),
                 );
@@ -134,24 +149,27 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           label: 'Имя',
                           hintText: 'Введите ваше имя',
                           controller: _nameController,
+                          errorText: _nameError,
                         ),
                         CustomFormField(
                           label: 'e-mail',
                           hintText: 'Ваша электронная почта',
                           controller: _emailController,
+                          errorText: _emailError,
                         ),
                         CustomFormField(
                           label: 'Пароль',
                           hintText: '8-16 символов',
                           controller: _passwordController,
                           obscureText: true,
+                          errorText: _passwordError,
                         ),
                         CustomFormField(
                           label: 'Подтверждение пароля',
                           hintText: '8-16 символов',
                           controller: _confirmPasswordController,
                           obscureText: true,
-                          errorText: _confirmationPasswordError,
+                          errorText: _confirmPasswordError,
                         ),
                       ],
                     ),
