@@ -13,6 +13,7 @@ import 'package:simple_paint/ui/widgets/tool_bar_icon_button.dart';
 
 import '../../bloc/canvas_state.dart';
 import '../../services/image_service.dart';
+import '../../utils/notification_helper.dart';
 
 class ShareButton extends StatelessWidget {
   const ShareButton({super.key});
@@ -66,5 +67,6 @@ class ShareButton extends StatelessWidget {
             boundary.localToGlobal(Offset.zero) & boundary.size,
       ),
     );
+    NotificationHelper.showNotification('Изображение экспортировано');
   }
 }

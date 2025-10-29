@@ -27,6 +27,8 @@ class CustomFormField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasError = errorText != null && errorText!.isNotEmpty;
+
     return Column(
       children: [
         ClipRRect(
@@ -38,7 +40,13 @@ class CustomFormField extends StatelessWidget {
                 Container(
                   decoration: BoxDecoration(
                     color: Color(0xFF131313).withAlpha(63),
-                    border: Border.all(width: 0.5, color: Color(0xFF87858F)),
+                    border: Border.all(
+                      width: 0.5,
+                      color:
+                          hasError
+                              ? Colors.red.withValues(alpha: 0.7)
+                              : Color(0xFF87858F),
+                    ),
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(color: Color(0x34E3E3E3).withAlpha(51)),
@@ -58,7 +66,10 @@ class CustomFormField extends StatelessWidget {
                           label,
                           style: GoogleFonts.roboto(
                             fontSize: 12,
-                            color: Color(0xFF87858F),
+                            color:
+                                hasError
+                                    ? Colors.red.withValues(alpha: 0.8)
+                                    : Color(0xFF87858F),
                             fontWeight: FontWeight.w400,
                           ),
                         ),
@@ -76,7 +87,7 @@ class CustomFormField extends StatelessWidget {
                             fontWeight: FontWeight.w400,
                           ),
                           decoration: InputDecoration(
-                            errorText: errorText,
+                            errorText: null,
                             hintText: hintText,
                             hintStyle: GoogleFonts.roboto(
                               fontSize: 14,
@@ -94,25 +105,46 @@ class CustomFormField extends StatelessWidget {
                               borderRadius: BorderRadius.zero,
                               borderSide: BorderSide(
                                 width: 0.3,
-                                color: Color(0xFF87858F),
+                                color:
+                                    hasError
+                                        ? Colors.red.withValues(alpha: 0.7)
+                                        : Color(0xFF87858F),
                               ),
                             ),
                             enabledBorder: UnderlineInputBorder(
                               borderRadius: BorderRadius.zero,
                               borderSide: BorderSide(
                                 width: 0.3,
-                                color: Color(0xFF87858F),
+                                color:
+                                    hasError
+                                        ? Colors.red.withValues(alpha: 0.7)
+                                        : Color(0xFF87858F),
                               ),
                             ),
                             focusedBorder: UnderlineInputBorder(
                               borderRadius: BorderRadius.zero,
                               borderSide: BorderSide(
                                 width: 0.3,
-                                color: Color(0xFF87858F),
+                                color:
+                                    hasError
+                                        ? Colors.red.withValues(alpha: 0.7)
+                                        : Color(0xFF87858F),
                               ),
                             ),
                           ),
                         ),
+
+                        if (hasError) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            errorText!,
+                            style: GoogleFonts.roboto(
+                              fontSize: 11,
+                              color: Colors.red.withValues(alpha: 0.7),
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

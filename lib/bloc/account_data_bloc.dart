@@ -49,7 +49,9 @@ class AccountDataBloc extends Bloc<AccountDataEvent, AccountDataState> {
         emit(const AccountDataError(message: 'Ошибка входа'));
       }
     } on FirebaseAuthException catch (e) {
-      emit(AccountDataError(message: FirebaseAuthErrorHelper.getErrorMessage(e)));
+      emit(
+        AccountDataError(message: FirebaseAuthErrorHelper.getErrorMessage(e)),
+      );
     } catch (e) {
       emit(AccountDataError(message: 'Неизвестная ошибка: $e'));
     }
@@ -73,13 +75,15 @@ class AccountDataBloc extends Bloc<AccountDataEvent, AccountDataState> {
 
         final updatedUser = _firebaseAuth.currentUser;
         if (updatedUser != null) {
-          emit(AccountDataAuthenticated(user: updatedUser));
+          emit(AccountDataCreated(user: updatedUser));
         }
       } else {
         emit(const AccountDataError(message: 'Ошибка регистрации'));
       }
     } on FirebaseAuthException catch (e) {
-      emit(AccountDataError(message: FirebaseAuthErrorHelper.getErrorMessage(e)));
+      emit(
+        AccountDataError(message: FirebaseAuthErrorHelper.getErrorMessage(e)),
+      );
     } catch (e) {
       emit(AccountDataError(message: 'Неизвестная ошибка: $e'));
     }
