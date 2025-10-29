@@ -8,7 +8,8 @@ import '../../bloc/toolbar_event.dart';
 import 'my_color_picker.dart';
 
 class ColorPalette extends StatelessWidget {
-  const ColorPalette({super.key});
+  final double _radius;
+  const ColorPalette({super.key, double radius = 14.0}) : _radius = radius;
 
   @override
   Widget build(BuildContext context) {
@@ -17,8 +18,8 @@ class ColorPalette extends StatelessWidget {
         return Container(
           alignment: Alignment.topRight,
           child: MyColorPicker(
-            arrowOffset: 155,
-            radius: 14,
+            arrowOffset: 430,
+            radius: _radius,
             child: SizedBox(
               child: BlockPicker(
                 pickerColor: toolbarState.strokePen.color,
@@ -45,13 +46,13 @@ class ColorPalette extends StatelessWidget {
 
     return Container(
       color: Colors.transparent,
-      width: 260,
-      height: orientation == Orientation.portrait ? 100 : 120,
+      width: orientation == Orientation.portrait ? 40 : 200,
+      height: orientation == Orientation.portrait ? 170 : 120,
       child: GridView.count(
-        crossAxisCount: orientation == Orientation.portrait ? 7 : 10,
+        crossAxisCount: orientation == Orientation.portrait ? 1 : 5,
         shrinkWrap: true,
-        crossAxisSpacing: 5,
-        mainAxisSpacing: 5,
+        crossAxisSpacing: 2,
+        mainAxisSpacing: 2,
         children: [for (Color color in colors) child(color)],
       ),
     );

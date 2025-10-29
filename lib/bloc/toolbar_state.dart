@@ -6,18 +6,28 @@ import '../data/stroke_pen.dart';
 class ToolbarState extends Equatable {
   final StrokePen strokePen;
   final bool isPaletteOpen;
+  final bool isWidthPickerOpen;
 
-  const ToolbarState({required this.strokePen, this.isPaletteOpen = false});
+  const ToolbarState({
+    required this.strokePen,
+    this.isPaletteOpen = false,
+    this.isWidthPickerOpen = false,
+  });
 
-  ToolbarState copyWith({StrokePen? strokePen, bool? isPaletteOpen}) {
+  ToolbarState copyWith({
+    StrokePen? strokePen,
+    bool? isPaletteOpen,
+    bool? isWidthPickerOpen,
+  }) {
     return ToolbarState(
       strokePen: strokePen ?? this.strokePen,
       isPaletteOpen: isPaletteOpen ?? this.isPaletteOpen,
+      isWidthPickerOpen: isWidthPickerOpen ?? this.isWidthPickerOpen,
     );
   }
 
   @override
-  List<Object?> get props => [strokePen, isPaletteOpen];
+  List<Object?> get props => [strokePen, isPaletteOpen, isWidthPickerOpen];
 }
 
 class ToolbarInitial extends ToolbarState {
@@ -29,5 +39,6 @@ class ToolbarInitial extends ToolbarState {
           type: PenType.pencil,
         ),
         isPaletteOpen: false,
+        isWidthPickerOpen: false,
       );
 }

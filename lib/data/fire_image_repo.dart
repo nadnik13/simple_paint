@@ -4,28 +4,16 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FireImageRepo {
   final FirebaseFirestore db;
-  final int chunkSize = 750 * 1024;
+  final int chunkSize = 120 * 1024;
 
   FireImageRepo(this.db);
 
   Future<Map<String, Uint8List>> downloadData(String imageId) async {
     final meta = await db.collection('images').doc(imageId).get();
-    print('get meta');
     if (!meta.exists) {
-      throw StateError('Image $imageId not found');
+      throw StateError('Изображение $imageId не найдено');
     }
-    try {
-      final bgSnap =
-          await db
-              .collection('images')
-              .doc(imageId)
-              .collection('background')
-              .orderBy('index')
-              .get();
-      print('bgSnap: ${bgSnap.size}');
-    } catch (e) {
-      print('Error: $e');
-    }
+
     final bgSnap =
         await db
             .collection('images')
@@ -33,7 +21,6 @@ class FireImageRepo {
             .collection('background')
             .orderBy('index')
             .get();
-    print('bgSnap: ${bgSnap.size}');
 
     final linesSnap =
         await db
@@ -43,7 +30,6 @@ class FireImageRepo {
             .orderBy('index')
             .get();
 
-    print('linesSnap: ${linesSnap.size}');
     return {'background': _getBytes(bgSnap), 'lines': _getBytes(linesSnap)};
   }
 
@@ -71,10 +57,7 @@ class FireImageRepo {
     required Uint8List previewBytes,
     required Uint8List linesBytes,
   }) async {
-    print('saveImage fireStore');
-
     if (imageId == null) {
-      print('_uploadImage: ${previewBytes.length}');
       return _uploadImage(
         userId: userId,
         bgBytes: bgBytes,
@@ -82,7 +65,6 @@ class FireImageRepo {
         linesBytes: linesBytes,
       );
     } else {
-      print('_replaceImage: ${previewBytes.length}');
       return _replaceImage(
         imageId: imageId,
         userId: userId,
@@ -106,18 +88,19 @@ class FireImageRepo {
     Uint8List bytes,
     CollectionReference<Map<String, dynamic>> collection,
   ) async {
-    print('_uploadChunks');
     var offset = 0;
     for (int i = 0; i < chunkCount; i++) {
       final end =
           (offset + chunkSize > bytes.length)
               ? bytes.length
               : offset + chunkSize;
+
       final slice = bytes.sublist(offset, end);
       offset = end;
 
       final metaRef = collection.doc();
       final chunkId = metaRef.id;
+
       await metaRef.set({'chunkId': chunkId, 'index': i, 'data': slice});
     }
   }
@@ -128,40 +111,31 @@ class FireImageRepo {
     required Uint8List previewBytes,
     required Uint8List linesBytes,
   }) async {
-    print('_uploadImage fireStore');
     final metaRef = db.collection('images').doc();
     final imageId = metaRef.id;
     final bgChunkCount = (bgBytes.length + chunkSize - 1) ~/ chunkSize;
     final linesChunkCount = (linesBytes.length + chunkSize - 1) ~/ chunkSize;
-    print('bgChunkCount=$bgChunkCount linesChunkCount=$linesChunkCount');
-    try {
-      await metaRef.set({
-        'ownerUid': userId,
-        'imageId': imageId,
-        'size': bgBytes.length,
-        'bgChunkCount': bgChunkCount,
-        'linesChunkCount': linesChunkCount,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      print(e);
-    }
 
-    print('metaRef set');
+    await metaRef.set({
+      'ownerUid': userId,
+      'imageId': imageId,
+      'size': bgBytes.length,
+      'bgChunkCount': bgChunkCount,
+      'linesChunkCount': linesChunkCount,
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
 
     await _uploadChunks(
       bgChunkCount,
       bgBytes,
       metaRef.collection('background'),
     );
-    print('_uploadedChunks background');
     await _uploadChunks(
       linesChunkCount,
       linesBytes,
       metaRef.collection('lines'),
     );
-    print('_uploadedChunks lines');
 
     final thumbBytes = previewBytes;
     await db.collection('preview_images').doc(imageId).set({
@@ -211,7 +185,6 @@ class FireImageRepo {
       metaRef.collection('lines'),
     );
 
-    print('thumb updated: ${FieldValue.serverTimestamp()}');
     final thumbBytes = previewBytes;
     await db.collection('preview_images').doc(imageId).update({
       'thumb': thumbBytes,

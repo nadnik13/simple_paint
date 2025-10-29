@@ -11,6 +11,7 @@ class CustomFormField extends StatelessWidget {
   final TextInputType keyboardType;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
+  final String? errorText;
 
   const CustomFormField({
     super.key,
@@ -21,6 +22,7 @@ class CustomFormField extends StatelessWidget {
     this.keyboardType = TextInputType.text,
     this.validator,
     this.onChanged,
+    this.errorText,
   });
 
   @override
@@ -31,7 +33,6 @@ class CustomFormField extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 100, sigmaY: 100),
-            //enabled: false,
             child: Stack(
               children: [
                 Container(
@@ -40,16 +41,9 @@ class CustomFormField extends StatelessWidget {
                     border: Border.all(width: 0.5, color: Color(0xFF87858F)),
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
+                      BoxShadow(color: Color(0x34E3E3E3).withAlpha(51)),
                       BoxShadow(
-                        color: Color(
-                          0x34E3E3E3,
-                        ).withAlpha(51), // 20% прозрачности
-                        //offset: const Offset(0, 1),
-                        // blurRadius: 40,
-                        // spreadRadius: 0,
-                      ),
-                      BoxShadow(
-                        color: Color(0xFF131313), // 20% прозрачности
+                        color: Color(0xFF131313),
                         blurRadius: 40,
                         spreadRadius: 0,
                       ),
@@ -60,7 +54,6 @@ class CustomFormField extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Лейбл поля
                         Text(
                           label,
                           style: GoogleFonts.roboto(
@@ -71,7 +64,6 @@ class CustomFormField extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
 
-                        // Поле ввода
                         TextFormField(
                           controller: controller,
                           obscureText: obscureText,
@@ -84,6 +76,7 @@ class CustomFormField extends StatelessWidget {
                             fontWeight: FontWeight.w400,
                           ),
                           decoration: InputDecoration(
+                            errorText: errorText,
                             hintText: hintText,
                             hintStyle: GoogleFonts.roboto(
                               fontSize: 14,

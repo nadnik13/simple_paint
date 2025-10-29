@@ -7,6 +7,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:simple_paint/bloc/canvas_bloc.dart';
 import 'package:simple_paint/bloc/image_bloc.dart';
+import 'package:simple_paint/bloc/image_save_event.dart';
+import 'package:simple_paint/bloc/image_save_state.dart';
 import 'package:simple_paint/bloc/toolbar_bloc.dart';
 import 'package:simple_paint/bloc/toolbar_event.dart';
 import 'package:simple_paint/bloc/toolbar_state.dart';
@@ -15,10 +17,14 @@ import 'package:simple_paint/ui/widgets/color_palette.dart';
 import 'package:simple_paint/ui/widgets/drawing_area.dart';
 import 'package:simple_paint/ui/widgets/scaffold_with_background.dart';
 import 'package:simple_paint/ui/widgets/tool_bar.dart';
+import 'package:simple_paint/ui/widgets/width_picker.dart';
+import 'package:simple_paint/utils/notification_helper.dart';
 
 import '../bloc/canvas_state.dart';
 import '../bloc/image_event.dart';
+import '../bloc/image_save_bloc.dart';
 import '../bloc/image_state.dart';
+import '../bloc/line_bloc.dart';
 
 class DrawingPage extends StatefulWidget {
   final String? imageId;
@@ -30,12 +36,9 @@ class DrawingPage extends StatefulWidget {
 }
 
 class _DrawingPageState extends State<DrawingPage> {
-  final GlobalKey _repainBoundaryGlobalKey = GlobalKey();
-
-  Future<ui.Image> _getImageFromRenderObject() async {
+  Future<ui.Image> _getImageFromRenderObject(GlobalKey key) async {
     RenderRepaintBoundary boundary =
-        _repainBoundaryGlobalKey.currentContext?.findRenderObject()
-            as RenderRepaintBoundary;
+        key.currentContext?.findRenderObject() as RenderRepaintBoundary;
     return await boundary.toImage();
   }
 
@@ -48,67 +51,36 @@ class _DrawingPageState extends State<DrawingPage> {
     super.initState();
   }
 
-  // Future<void> export(ImageState imageState) async {
-  //   print('save image');
-  //   try {
-  //     // Используем объединенный boundary для захвата всех элементов
-  //     RenderRepaintBoundary boundary =
-  //         _repainBoundaryGlobalKey.currentContext?.findRenderObject()
-  //             as RenderRepaintBoundary;
-  //
-  //     final imageId = widget.imageId;
-  //     ui.Image image = await boundary.toImage();
-  //
-  //     final imageId = widget.imageId;
-  //
-  //     if (imageId != null) {
-  //       context.read<ImageBloc>().add(
-  //         SaveOriginalImageEvent(imageId: imageId, image: image, lines: []),
-  //       );
-  //     } else {
-  //       context.read<ImageBloc>().add(CreateNewImageEvent(image: image));
-  //     }
-  //     print("saved: ${context.read<ImageBloc>().state}");
-  //     print("saved");
-  //     context.read<GalleryBloc>().add(RefreshImagesEvent());
-  //     context.go('/gallery');
-  //   } catch (e) {
-  //     print('Error: ${e}');
-  //   }
-  // }
   Future<void> _onPressedSaveButton(
     String? imageId,
     ui.Image? backgroundImage,
     List<DrawnLine> lines,
+    GlobalKey canvasKey,
   ) async {
-    final image = await _getImageFromRenderObject();
+    final image = await _getImageFromRenderObject(canvasKey);
 
     if (context.mounted) {
-      context.read<ImageBloc>().add(
-        SaveImageEvent(
+      context.read<ImageSaveBloc>().add(
+        ImageSaveEvent(
           imageId: imageId,
           image: image,
           lines: lines,
           background: backgroundImage,
         ),
       );
-      print("saved: ${context.read<ImageBloc>().state}");
-      print("saved");
-      context.go('/gallery');
     }
     ;
   }
 
   @override
   Widget build(BuildContext context) {
-    print('imageState: ${context.watch<ImageBloc>().state}');
     return ScaffoldWithBackground(
       appBar: AppBar(
         backgroundColor: Color(0x1AC4C4C4),
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
           onPressed: () {
-            context.go('/gallery');
+            context.pop();
           },
           icon: Image.asset('assets/back.png'),
         ),
@@ -125,6 +97,7 @@ class _DrawingPageState extends State<DrawingPage> {
                       widget.imageId,
                       canvasState.backgroundImage,
                       canvasState.lines,
+                      canvasState.key,
                     ),
                 icon: Image.asset('assets/save.png'),
               );
@@ -146,6 +119,7 @@ class _DrawingPageState extends State<DrawingPage> {
                   },
                   onPressedPen: () {
                     context.read<ToolbarBloc>().add(SelectPencilEvent());
+                    context.read<ToolbarBloc>().add(ToggleWidthPickerEvent());
                   },
                   onPressedErase: () {
                     context.read<ToolbarBloc>().add(SelectEraserEvent());
@@ -167,17 +141,44 @@ class _DrawingPageState extends State<DrawingPage> {
                             return Center(child: Text(imageState.message));
                           }
                           if (imageState is ImageLoaded) {
-                            print('imageState: ${imageState.lines.isNotEmpty}');
-                            return DrawingArea(
-                              canvasKey: _repainBoundaryGlobalKey,
-                              lines: imageState.lines,
-                              background: imageState.backgroundImage,
+                            return BlocConsumer<ImageSaveBloc, ImageSaveState>(
+                              listener: (context, imageState) {
+                                if (imageState is ImageSaveSaved) {
+                                  NotificationHelper.showNotification(
+                                    'Изображение сохранено успешно',
+                                  );
+                                  context.pop();
+                                }
+                              },
+                              builder: (context, state) {
+                                return Stack(
+                                  children: [
+                                    BlocProvider(
+                                      create: (context) => LineBloc(),
+                                      child: DrawingArea(
+                                        lines: imageState.lines,
+                                        background: imageState.backgroundImage,
+                                      ),
+                                    ),
+                                    if (state is ImageSaveSaving)
+                                      ColoredBox(
+                                        color: Colors.black.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        child: Center(
+                                          child: CircularProgressIndicator(),
+                                        ),
+                                      ),
+                                  ],
+                                );
+                              },
                             );
                           }
                           return Center(child: CircularProgressIndicator());
                         },
                       ),
                       if (toolbarState.isPaletteOpen) ColorPalette(),
+                      if (toolbarState.isWidthPickerOpen) WidthPicker(),
                     ],
                   ),
                 ),

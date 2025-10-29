@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../utils/firebase_auth_error_helper.dart';
 import 'account_data_event.dart';
 import 'account_data_state.dart';
 
@@ -48,7 +49,7 @@ class AccountDataBloc extends Bloc<AccountDataEvent, AccountDataState> {
         emit(const AccountDataError(message: 'Ошибка входа'));
       }
     } on FirebaseAuthException catch (e) {
-      emit(AccountDataError(message: 'Ошибка входа: ${e.message}'));
+      emit(AccountDataError(message: FirebaseAuthErrorHelper.getErrorMessage(e)));
     } catch (e) {
       emit(AccountDataError(message: 'Неизвестная ошибка: $e'));
     }
@@ -78,7 +79,7 @@ class AccountDataBloc extends Bloc<AccountDataEvent, AccountDataState> {
         emit(const AccountDataError(message: 'Ошибка регистрации'));
       }
     } on FirebaseAuthException catch (e) {
-      emit(AccountDataError(message: 'Ошибка регистрации: ${e.message}'));
+      emit(AccountDataError(message: FirebaseAuthErrorHelper.getErrorMessage(e)));
     } catch (e) {
       emit(AccountDataError(message: 'Неизвестная ошибка: $e'));
     }

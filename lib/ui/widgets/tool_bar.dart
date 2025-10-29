@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:simple_paint/ui/widgets/share_button.dart';
 import 'package:simple_paint/ui/widgets/tool_bar_icon_button.dart';
 
 import '../../data/stroke_pen.dart';
-import '../../services/image_picker_button.dart';
+import 'image_picker_button.dart';
 
 class Toolbar extends StatelessWidget {
   final VoidCallback onPressedExport;
@@ -28,10 +29,7 @@ class Toolbar extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.end,
       spacing: 8,
       children: [
-        ToolBarIconButton(
-          icon: Image.asset('assets/download.png'),
-          onPressed: onPressedExport,
-        ),
+        ShareButton(),
 
         ImagePickerButton(),
 

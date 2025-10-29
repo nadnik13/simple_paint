@@ -6,19 +6,12 @@ import 'toolbar_state.dart';
 
 class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
   ToolbarBloc() : super(ToolbarInitial()) {
-    on<ExportImageEvent>(_onExportImage);
     on<SelectPencilEvent>(_onSelectPencil);
     on<SelectEraserEvent>(_onSelectEraser);
     on<TogglePaletteEvent>(_onTogglePalette);
+    on<ToggleWidthPickerEvent>(_onToggleWidthPicker);
     on<ChangeColorEvent>(_onChangeColor);
     on<ChangeWidthEvent>(_onChangeWidth);
-    on<ChangeStrokePenTypeEvent>(_onUpdateStrokePenType);
-  }
-
-  void _onExportImage(ExportImageEvent event, Emitter<ToolbarState> emit) {
-    // Логика экспорта изображения будет обрабатываться в UI
-    // Здесь можно добавить дополнительную логику если нужно
-    print('Экспорт изображения');
   }
 
   void _onSelectPencil(SelectPencilEvent event, Emitter<ToolbarState> emit) {
@@ -28,29 +21,43 @@ class ToolbarBloc extends Bloc<ToolbarEvent, ToolbarState> {
 
   void _onSelectEraser(SelectEraserEvent event, Emitter<ToolbarState> emit) {
     final updatedPen = state.strokePen.copyWith(type: PenType.eraser);
-    emit(state.copyWith(strokePen: updatedPen));
+    emit(
+      state.copyWith(
+        strokePen: updatedPen,
+        isPaletteOpen: false,
+        isWidthPickerOpen: false,
+      ),
+    );
+  }
+
+  void _onToggleWidthPicker(
+    ToggleWidthPickerEvent event,
+    Emitter<ToolbarState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        isWidthPickerOpen: !state.isWidthPickerOpen,
+        isPaletteOpen: false,
+      ),
+    );
   }
 
   void _onTogglePalette(TogglePaletteEvent event, Emitter<ToolbarState> emit) {
-    emit(state.copyWith(isPaletteOpen: !state.isPaletteOpen));
+    emit(
+      state.copyWith(
+        isPaletteOpen: !state.isPaletteOpen,
+        isWidthPickerOpen: false,
+      ),
+    );
   }
 
   void _onChangeColor(ChangeColorEvent event, Emitter<ToolbarState> emit) {
-    print('_onChangeColor: ${event.color}');
     final updatedPen = state.strokePen.copyWith(color: event.color);
-    emit(state.copyWith(strokePen: updatedPen));
+    emit(state.copyWith(strokePen: updatedPen, isPaletteOpen: false));
   }
 
   void _onChangeWidth(ChangeWidthEvent event, Emitter<ToolbarState> emit) {
     final updatedPen = state.strokePen.copyWith(width: event.width);
-    emit(state.copyWith(strokePen: updatedPen));
-  }
-
-  void _onUpdateStrokePenType(
-    ChangeStrokePenTypeEvent event,
-    Emitter<ToolbarState> emit,
-  ) {
-    final updatedPen = state.strokePen.copyWith(type: event.penType);
-    emit(state.copyWith(strokePen: updatedPen));
+    emit(state.copyWith(strokePen: updatedPen, isWidthPickerOpen: false));
   }
 }
