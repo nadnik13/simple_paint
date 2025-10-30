@@ -7,6 +7,7 @@ import 'package:simple_paint/bloc/canvas_state.dart';
 import 'package:simple_paint/bloc/line_bloc.dart';
 import 'package:simple_paint/bloc/line_state.dart';
 import 'package:simple_paint/bloc/toolbar_bloc.dart';
+import 'package:simple_paint/data/stroke_pen.dart';
 import 'package:simple_paint/services/background_sketcher.dart';
 import 'package:simple_paint/services/lines_sketcher.dart';
 
@@ -56,6 +57,11 @@ class _DrawingAreaState extends State<DrawingArea> {
                       onPanEnd: onPanEnd,
                       child: Stack(
                         children: [
+                          /* при использовании стерки необходимо отрисовывать
+                           все линии на одном холсте с текущей,
+                           в других случаях можно оптимизировать ui путем
+                           отрисовки текущей линии поверх остальных
+                           */
                           CustomPaint(
                             size: Size(
                               constraints.maxWidth,
@@ -73,10 +79,20 @@ class _DrawingAreaState extends State<DrawingArea> {
                             painter: LinesSketcher(
                               lines: [
                                 ...canvasState.lines,
-                                if (line != null) line,
+                                if (line != null &&
+                                    line.penType == PenType.eraser)
+                                  line,
                               ],
                             ),
                           ),
+                          if (line != null && line.penType != PenType.eraser)
+                            CustomPaint(
+                              size: Size(
+                                constraints.maxWidth,
+                                constraints.maxHeight,
+                              ),
+                              painter: LinesSketcher(lines: [line]),
+                            ),
                         ],
                       ),
                     );

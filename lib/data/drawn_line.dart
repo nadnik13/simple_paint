@@ -6,25 +6,25 @@ class DrawnLine extends Equatable {
   final List<Offset?> path;
   final Color color;
   final double width;
-  final BlendMode blendMode;
+  final PenType penType;
+  BlendMode get blendMode => _getBlendMode(penType);
 
   const DrawnLine({
     required this.path,
     required this.color,
     this.width = 5,
-    required this.blendMode,
+    required this.penType,
   });
 
   factory DrawnLine.getByPathAndPen({
     required List<Offset?> path,
     required StrokePen pen,
   }) {
-    final penType = pen.type;
     return DrawnLine(
       path: path,
       color: pen.color,
       width: pen.width,
-      blendMode: _getBlendMode(penType),
+      penType: pen.type,
     );
   }
 
@@ -61,10 +61,10 @@ class DrawnLine extends Equatable {
           }).toList(),
       color: Color(json['color']),
       width: json['width'],
-      blendMode: BlendMode.values[json['blendMode']],
+      penType: PenType.values[json['penType']],
     );
   }
 
   @override
-  List<Object?> get props => [path, color, width, blendMode];
+  List<Object?> get props => [path, color, width, penType];
 }
