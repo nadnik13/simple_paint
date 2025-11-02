@@ -27,7 +27,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   String _email = '';
   String _password = '';
   String _confirmPassword = '';
-  
+
   // Ошибки для каждого поля
   String? _nameError;
   String? _emailError;
@@ -43,29 +43,35 @@ class _RegistrationPageState extends State<RegistrationPage> {
         _nameError = FormValidator.validateName(_name);
       });
     });
-    
+
     _emailController.addListener(() {
       setState(() {
         _email = _emailController.text;
         _emailError = FormValidator.validateEmail(_email);
       });
     });
-    
+
     _passwordController.addListener(() {
       setState(() {
         _password = _passwordController.text;
         _passwordError = FormValidator.validatePassword(_password);
         // Перепроверяем подтверждение пароля при изменении основного пароля
         if (_confirmPassword.isNotEmpty) {
-          _confirmPasswordError = FormValidator.validateConfirmPassword(_password, _confirmPassword);
+          _confirmPasswordError = FormValidator.validateConfirmPassword(
+            _password,
+            _confirmPassword,
+          );
         }
       });
     });
-    
+
     _confirmPasswordController.addListener(() {
       setState(() {
         _confirmPassword = _confirmPasswordController.text;
-        _confirmPasswordError = FormValidator.validateConfirmPassword(_password, _confirmPassword);
+        _confirmPasswordError = FormValidator.validateConfirmPassword(
+          _password,
+          _confirmPassword,
+        );
       });
     });
   }
@@ -91,9 +97,15 @@ class _RegistrationPageState extends State<RegistrationPage> {
     final nameError = FormValidator.validateName(_name);
     final emailError = FormValidator.validateEmail(_email);
     final passwordError = FormValidator.validatePassword(_password);
-    final confirmPasswordError = FormValidator.validateConfirmPassword(_password, _confirmPassword);
+    final confirmPasswordError = FormValidator.validateConfirmPassword(
+      _password,
+      _confirmPassword,
+    );
 
-    if (nameError != null || emailError != null || passwordError != null || confirmPasswordError != null) {
+    if (nameError != null ||
+        emailError != null ||
+        passwordError != null ||
+        confirmPasswordError != null) {
       // Обновляем состояние с ошибками
       setState(() {
         _nameError = nameError;
@@ -148,18 +160,21 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         CustomFormField(
                           label: 'Имя',
                           hintText: 'Введите ваше имя',
+                          keyboardType: TextInputType.name,
                           controller: _nameController,
                           errorText: _nameError,
                         ),
                         CustomFormField(
                           label: 'e-mail',
                           hintText: 'Ваша электронная почта',
+                          keyboardType: TextInputType.emailAddress,
                           controller: _emailController,
                           errorText: _emailError,
                         ),
                         CustomFormField(
                           label: 'Пароль',
                           hintText: '8-16 символов',
+                          keyboardType: TextInputType.text,
                           controller: _passwordController,
                           obscureText: true,
                           errorText: _passwordError,
@@ -167,6 +182,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         CustomFormField(
                           label: 'Подтверждение пароля',
                           hintText: '8-16 символов',
+                          keyboardType: TextInputType.text,
                           controller: _confirmPasswordController,
                           obscureText: true,
                           errorText: _confirmPasswordError,

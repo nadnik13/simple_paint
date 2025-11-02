@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:simple_paint/bloc/account_data_bloc.dart';
+import 'package:simple_paint/bloc/internet_connection_cubit.dart';
 import 'package:simple_paint/data/gallery_repo.dart';
 import 'package:simple_paint/ui/auth_page.dart';
 import 'package:simple_paint/ui/drawing_page.dart';
@@ -62,9 +63,7 @@ final GoRouter _router = GoRouter(
         final userRepo = UserRepo(user.uid);
         final galleryRepo = GalleryRepo(FirebaseFirestore.instance);
         return BlocProvider<GalleryBloc>(
-          create:
-              (context) =>
-                  GalleryBloc(userRepo: userRepo, galleryRepo: galleryRepo),
+          create: (context) => GalleryBloc(userRepo: userRepo, galleryRepo: galleryRepo),
           child: const GalleryPage(),
         );
       },
@@ -116,8 +115,15 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<AccountDataBloc>(
-      create: (context) => AccountDataBloc(firebaseAuth: FirebaseAuth.instance),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AccountDataBloc>(
+          create: (context) => AccountDataBloc(firebaseAuth: FirebaseAuth.instance),
+        ),
+        BlocProvider<InternetConnectionCubit>(
+          create: (context) => InternetConnectionCubit(),
+        ),
+      ],
       child: MaterialApp.router(
         title: 'Simple Paint',
         theme: ThemeData(

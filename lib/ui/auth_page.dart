@@ -77,6 +77,7 @@ class _AuthPageState extends State<AuthPage> {
                         PressStart2PTitle(text: 'Вход'),
                         CustomFormField(
                           label: 'e-mail',
+                          keyboardType: TextInputType.emailAddress,
                           hintText: 'Введите электронную почту',
                           controller: _emailController,
                         ),
@@ -84,6 +85,7 @@ class _AuthPageState extends State<AuthPage> {
                         CustomFormField(
                           label: 'Подтверждение пароля',
                           hintText: 'Введите пароль',
+                          keyboardType: TextInputType.text,
                           controller: _passwordController,
                           obscureText: true,
                         ),

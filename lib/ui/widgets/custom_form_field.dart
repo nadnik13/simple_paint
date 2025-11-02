@@ -9,6 +9,7 @@ class CustomFormField extends StatelessWidget {
   final TextEditingController? controller;
   final bool obscureText;
   final TextInputType keyboardType;
+  final TextInputAction textInputAction;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
   final String? errorText;
@@ -20,6 +21,7 @@ class CustomFormField extends StatelessWidget {
     this.controller,
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
+    this.textInputAction = TextInputAction.next,
     this.validator,
     this.onChanged,
     this.errorText,
@@ -79,6 +81,7 @@ class CustomFormField extends StatelessWidget {
                           controller: controller,
                           obscureText: obscureText,
                           keyboardType: keyboardType,
+                          textInputAction: textInputAction,
                           validator: validator,
                           onChanged: onChanged,
                           style: GoogleFonts.roboto(
