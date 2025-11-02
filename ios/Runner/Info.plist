@@ -45,8 +45,15 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-    <string>DownloadToGallery</string>
-
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>This permission is required for saving created drawings to the photo library when exporting images through the share function</string>
+    <key>NSCameraUsageDescription</key>
+    <string>This permission is required by the image_picker library for camera access, but is not used by the app</string>
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>This permission is required by the image_picker library for photo library access, but is not used by the app</string>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>This permission is required by the image_picker library for video recording with audio, but is not used by the app</string>
+    <key>NSUserNotificationsUsageDescription</key>
+    <string>This app sends notifications to inform users when drawings are successfully saved or exported</string>
 </dict>
 </plist>
