@@ -93,7 +93,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
   }
 
   void _register() {
-    // Финальная проверка перед отправкой
     final nameError = FormValidator.validateName(_name);
     final emailError = FormValidator.validateEmail(_email);
     final passwordError = FormValidator.validatePassword(_password);
@@ -142,7 +141,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Успешная регистрация!')),
                 );
-                context.go('/auth'); // Возвращаемся на страницу входа
+                context.go('/gallery');
               }
             },
             child: Padding(

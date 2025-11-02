@@ -60,13 +60,15 @@ class ShareButton extends StatelessWidget {
         SnackBar(content: Text('Не удалось сохранить изображение')),
       );
     }
-    await SharePlus.instance.share(
+    final shareResult = await SharePlus.instance.share(
       ShareParams(
         files: files,
         sharePositionOrigin:
             boundary.localToGlobal(Offset.zero) & boundary.size,
       ),
     );
-    NotificationHelper.showNotification('Изображение экспортировано');
+    if (shareResult.status == ShareResultStatus.success) {
+      NotificationHelper.showNotification('Изображение экспортировано');
+    }
   }
 }
