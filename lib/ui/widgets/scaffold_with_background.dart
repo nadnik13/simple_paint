@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:simple_paint/ui/widgets/internet_connection_indicator.dart';
 
 class ScaffoldWithBackground extends StatelessWidget {
   final Widget child;
@@ -73,7 +72,6 @@ class ScaffoldWithBackground extends StatelessWidget {
                     )
                     : null,
             body: child,
-            bottomNavigationBar: InternetConnectionIndicator(),
           ),
 
           // Align(

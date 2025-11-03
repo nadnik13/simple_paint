@@ -21,6 +21,7 @@ import 'bloc/toolbar_bloc.dart';
 import 'data/fire_image_repo.dart';
 import 'data/user_repo.dart';
 import 'firebase_options.dart';
+import 'ui/widgets/internet_connection_indicator.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,7 +64,9 @@ final GoRouter _router = GoRouter(
         final userRepo = UserRepo(user.uid);
         final galleryRepo = GalleryRepo(FirebaseFirestore.instance);
         return BlocProvider<GalleryBloc>(
-          create: (context) => GalleryBloc(userRepo: userRepo, galleryRepo: galleryRepo),
+          create:
+              (context) =>
+                  GalleryBloc(userRepo: userRepo, galleryRepo: galleryRepo),
           child: const GalleryPage(),
         );
       },
@@ -118,18 +121,30 @@ class _MyAppState extends State<MyApp> {
     return MultiBlocProvider(
       providers: [
         BlocProvider<AccountDataBloc>(
-          create: (context) => AccountDataBloc(firebaseAuth: FirebaseAuth.instance),
+          create:
+              (context) => AccountDataBloc(firebaseAuth: FirebaseAuth.instance),
         ),
         BlocProvider<InternetConnectionCubit>(
           create: (context) => InternetConnectionCubit(),
         ),
       ],
-      child: MaterialApp.router(
-        title: 'Simple Paint',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Stack(
+          children: [
+            MaterialApp.router(
+              title: 'Simple Paint',
+              theme: ThemeData(
+                colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              ),
+              routerConfig: _router,
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: InternetConnectionIndicator(),
+            ),
+          ],
         ),
-        routerConfig: _router,
       ),
     );
   }

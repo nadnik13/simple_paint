@@ -1,37 +1,91 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../bloc/internet_connection_cubit.dart';
 import '../../bloc/internet_connection_state.dart';
 
-class InternetConnectionIndicator extends StatelessWidget {
+class InternetConnectionIndicator extends StatefulWidget {
   final EdgeInsetsGeometry? margin;
 
   const InternetConnectionIndicator({super.key, this.margin});
 
   @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<InternetConnectionCubit, InternetConnectionState>(
-      builder: (context, state) {
-        if (!state.isVisible) {
-          return const SizedBox.shrink();
-        }
+  State<InternetConnectionIndicator> createState() =>
+      _InternetConnectionIndicatorState();
+}
 
-        return AnimatedContainer(
-          height: kToolbarHeight + 20,
-          duration: const Duration(milliseconds: 100),
-          child: _buildIndicator(context, state),
-        );
+class _InternetConnectionIndicatorState
+    extends State<InternetConnectionIndicator> {
+  late bool _isVisible;
+  Timer? _hideIndicatorTimer;
+
+  @override
+  void initState() {
+    _isVisible =
+        context.read<InternetConnectionCubit>().state !=
+        ConnectionStatus.connected;
+    super.initState();
+  }
+
+  void _hideAfterDelay() {
+    _hideIndicatorTimer = Timer(const Duration(seconds: 5), () {
+      _isVisible = false;
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  void _show() {
+    _hideIndicatorTimer?.cancel();
+    _isVisible = true;
+  }
+
+  @override
+  void dispose() {
+    _hideIndicatorTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocListener<InternetConnectionCubit, ConnectionStatus>(
+      listener: (context, state) {},
+      listenWhen: (prev, current) {
+        if (prev == current) {
+          return false;
+        }
+        if (prev != ConnectionStatus.connected &&
+            current == ConnectionStatus.connected) {
+          _hideAfterDelay();
+          return true;
+        }
+        _show();
+        return true;
       },
+      child: BlocBuilder<InternetConnectionCubit, ConnectionStatus>(
+        builder: (context, state) {
+          if (!_isVisible) {
+            return const SizedBox.shrink();
+          }
+
+          return AnimatedContainer(
+            height: kToolbarHeight + 20,
+            duration: const Duration(milliseconds: 100),
+            child: _buildIndicator(context, state),
+          );
+        },
+      ),
     );
   }
 
-  Widget _buildIndicator(BuildContext context, InternetConnectionState state) {
-    switch (state.status) {
+  Widget _buildIndicator(BuildContext context, ConnectionStatus state) {
+    switch (state) {
       case ConnectionStatus.connected:
         return _buildStatusCard(
           context,
-          icon: Icons.wifi,
           title: 'Вы подключены к интернету',
           backgroundColor: Colors.green,
         );
@@ -39,7 +93,6 @@ class InternetConnectionIndicator extends StatelessWidget {
       case ConnectionStatus.connecting:
         return _buildStatusCard(
           context,
-          icon: Icons.wifi_find,
           title: 'Подключение...',
           backgroundColor: Colors.lightBlueAccent,
         );
@@ -47,7 +100,6 @@ class InternetConnectionIndicator extends StatelessWidget {
       case ConnectionStatus.disconnected:
         return _buildStatusCard(
           context,
-          icon: Icons.wifi_off,
           title: 'Нет подключения к интернету',
           backgroundColor: Colors.red,
         );
@@ -56,7 +108,6 @@ class InternetConnectionIndicator extends StatelessWidget {
 
   Widget _buildStatusCard(
     BuildContext context, {
-    required IconData icon,
     required String title,
     Color color = Colors.white,
     required Color backgroundColor,

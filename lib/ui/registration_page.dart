@@ -9,6 +9,7 @@ import 'package:simple_paint/ui/widgets/custom_form_field.dart';
 import 'package:simple_paint/ui/widgets/press_start_2p_title.dart';
 
 import '../utils/form_validator.dart';
+import 'widgets/centered_form_view.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -123,14 +124,15 @@ class _RegistrationPageState extends State<RegistrationPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/background.png'),
-            fit: BoxFit.cover,
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/background.png'),
+              fit: BoxFit.cover,
+            ),
           ),
-        ),
-        child: SafeArea(
           child: BlocListener<AccountDataBloc, AccountDataState>(
             listener: (context, state) {
               if (state is AccountDataError) {
@@ -145,50 +147,47 @@ class _RegistrationPageState extends State<RegistrationPage> {
               }
             },
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      spacing: 20,
-                      children: [
-                        PressStart2PTitle(text: 'Регистрация'),
-                        CustomFormField(
-                          label: 'Имя',
-                          hintText: 'Введите ваше имя',
-                          keyboardType: TextInputType.name,
-                          controller: _nameController,
-                          errorText: _nameError,
-                        ),
-                        CustomFormField(
-                          label: 'e-mail',
-                          hintText: 'Ваша электронная почта',
-                          keyboardType: TextInputType.emailAddress,
-                          controller: _emailController,
-                          errorText: _emailError,
-                        ),
-                        CustomFormField(
-                          label: 'Пароль',
-                          hintText: '8-16 символов',
-                          keyboardType: TextInputType.text,
-                          controller: _passwordController,
-                          obscureText: true,
-                          errorText: _passwordError,
-                        ),
-                        CustomFormField(
-                          label: 'Подтверждение пароля',
-                          hintText: '8-16 символов',
-                          keyboardType: TextInputType.text,
-                          controller: _confirmPasswordController,
-                          obscureText: true,
-                          errorText: _confirmPasswordError,
-                        ),
-                      ],
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: CenteredFormView(
+                body: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  spacing: 20,
+                  children: [
+                    PressStart2PTitle(text: 'Регистрация'),
+                    CustomFormField(
+                      label: 'Имя',
+                      hintText: 'Введите ваше имя',
+                      keyboardType: TextInputType.name,
+                      controller: _nameController,
+                      errorText: _nameError,
                     ),
-                  ),
+                    CustomFormField(
+                      label: 'e-mail',
+                      hintText: 'Ваша электронная почта',
+                      keyboardType: TextInputType.emailAddress,
+                      controller: _emailController,
+                      errorText: _emailError,
+                    ),
+                    CustomFormField(
+                      label: 'Пароль',
+                      hintText: '8-16 символов',
+                      keyboardType: TextInputType.text,
+                      controller: _passwordController,
+                      obscureText: true,
+                      errorText: _passwordError,
+                    ),
+                    CustomFormField(
+                      label: 'Подтверждение пароля',
+                      hintText: '8-16 символов',
+                      keyboardType: TextInputType.text,
+                      controller: _confirmPasswordController,
+                      obscureText: true,
+                      errorText: _confirmPasswordError,
+                    ),
+                  ],
+                ),
+                actions: [
                   BlocBuilder<AccountDataBloc, AccountDataState>(
                     builder: (context, state) {
                       return CustomButton(
@@ -202,6 +201,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       );
                     },
                   ),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
