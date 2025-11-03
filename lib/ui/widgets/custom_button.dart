@@ -17,7 +17,7 @@ class CustomButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return DecoratedBox(
       decoration:
           isDark
               ? BoxDecoration(
@@ -35,13 +35,10 @@ class CustomButton extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               )
               : BoxDecoration(
-                color:
-                    isEnable
-                        ? Colors.white
-                        : Colors.white.withValues(alpha: 0.5),
+                color: isEnable ? Colors.white : Color(0xFF87858F),
                 borderRadius: BorderRadius.circular(8),
               ),
-      child: ElevatedButton(
+      child: TextButton(
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,

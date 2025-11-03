@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:simple_paint/bloc/account_data_bloc.dart';
+import 'package:simple_paint/bloc/internet_connection_cubit.dart';
 import 'package:simple_paint/data/gallery_repo.dart';
 import 'package:simple_paint/ui/auth_page.dart';
 import 'package:simple_paint/ui/drawing_page.dart';
@@ -20,6 +21,7 @@ import 'bloc/toolbar_bloc.dart';
 import 'data/fire_image_repo.dart';
 import 'data/user_repo.dart';
 import 'firebase_options.dart';
+import 'ui/widgets/internet_connection_indicator.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -116,14 +118,33 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<AccountDataBloc>(
-      create: (context) => AccountDataBloc(firebaseAuth: FirebaseAuth.instance),
-      child: MaterialApp.router(
-        title: 'Simple Paint',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AccountDataBloc>(
+          create:
+              (context) => AccountDataBloc(firebaseAuth: FirebaseAuth.instance),
         ),
-        routerConfig: _router,
+        BlocProvider<InternetConnectionCubit>(
+          create: (context) => InternetConnectionCubit(),
+        ),
+      ],
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Stack(
+          children: [
+            MaterialApp.router(
+              title: 'Simple Paint',
+              theme: ThemeData(
+                colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              ),
+              routerConfig: _router,
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: InternetConnectionIndicator(),
+            ),
+          ],
+        ),
       ),
     );
   }

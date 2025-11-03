@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
@@ -24,6 +26,18 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>This permission is required by the image_picker library for camera access, but is not used by the app</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This permission is required by the image_picker library for video recording with audio, but is not used by the app</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This permission is required for saving created drawings to the photo library when exporting images through the share function</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This permission is required by the image_picker library for photo library access, but is not used by the app</string>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>This app sends notifications to inform users when drawings are successfully saved or exported</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -41,12 +55,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-	<key>NSPhotoLibraryAddUsageDescription</key>
-    <string>DownloadToGallery</string>
-
 </dict>
 </plist>

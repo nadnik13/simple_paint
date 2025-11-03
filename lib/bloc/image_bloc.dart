@@ -66,7 +66,7 @@ class ImageBloc extends Bloc<ImageEvent, ImageState> {
           ),
         );
       }
-    } on FormatException catch (a, e) {
+    } on Object catch (a, e) {
       emit(ImageError(message: 'Ошибка загрузки изображения: $e $a'));
     }
   }

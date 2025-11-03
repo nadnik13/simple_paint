@@ -3,12 +3,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class CustomFormField extends StatelessWidget {
+class CustomFormField extends StatefulWidget {
   final String label;
   final String hintText;
   final TextEditingController? controller;
   final bool obscureText;
   final TextInputType keyboardType;
+  final TextInputAction textInputAction;
   final String? Function(String?)? validator;
   final void Function(String)? onChanged;
   final String? errorText;
@@ -20,14 +21,43 @@ class CustomFormField extends StatelessWidget {
     this.controller,
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
+    this.textInputAction = TextInputAction.next,
     this.validator,
     this.onChanged,
     this.errorText,
   });
 
   @override
+  State<CustomFormField> createState() => _CustomFormFieldState();
+}
+
+class _CustomFormFieldState extends State<CustomFormField> {
+  late FocusNode _focusNode;
+  bool _isFocused = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    _focusNode.addListener(_onFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _onFocusChange() {
+    setState(() {
+      _isFocused = _focusNode.hasFocus;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final hasError = errorText != null && errorText!.isNotEmpty;
+    final hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
 
     return Column(
       children: [
@@ -63,7 +93,7 @@ class CustomFormField extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          label,
+                          widget.label,
                           style: GoogleFonts.roboto(
                             fontSize: 12,
                             color:
@@ -76,19 +106,21 @@ class CustomFormField extends StatelessWidget {
                         const SizedBox(height: 4),
 
                         TextFormField(
-                          controller: controller,
-                          obscureText: obscureText,
-                          keyboardType: keyboardType,
-                          validator: validator,
-                          onChanged: onChanged,
+                          controller: widget.controller,
+                          obscureText: widget.obscureText,
+                          keyboardType: widget.keyboardType,
+                          textInputAction: widget.textInputAction,
+                          validator: widget.validator,
+                          onChanged: widget.onChanged,
+                          focusNode: _focusNode,
                           style: GoogleFonts.roboto(
                             fontSize: 14,
-                            color: Color(0xFF87858F),
+                            color: _isFocused ? Color(0xFF87858F) : Colors.white,
                             fontWeight: FontWeight.w400,
                           ),
                           decoration: InputDecoration(
                             errorText: null,
-                            hintText: hintText,
+                            hintText: widget.hintText,
                             hintStyle: GoogleFonts.roboto(
                               fontSize: 14,
                               color: Color(0xFF87858F),
@@ -137,7 +169,7 @@ class CustomFormField extends StatelessWidget {
                         if (hasError) ...[
                           const SizedBox(height: 4),
                           Text(
-                            errorText!,
+                            widget.errorText!,
                             style: GoogleFonts.roboto(
                               fontSize: 11,
                               color: Colors.red.withValues(alpha: 0.7),
