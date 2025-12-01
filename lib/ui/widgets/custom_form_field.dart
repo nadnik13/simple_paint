@@ -69,7 +69,12 @@ class _CustomFormFieldState extends State<CustomFormField> {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Color(0xFF131313).withAlpha(63),
+                    image: DecorationImage(
+                      image: AssetImage('assets/background1.png'),
+                      fit: BoxFit.cover,
+                      opacity: 0.25,
+                    ),
+                    //color: Color(0xFF131313),
                     border: Border.all(
                       width: 0.5,
                       color:
@@ -79,8 +84,9 @@ class _CustomFormFieldState extends State<CustomFormField> {
                     ),
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
-                      BoxShadow(color: Color(0x34E3E3E3).withAlpha(51)),
+                      BoxShadow(color: Color(0x34E3E3E3).withAlpha(20)),
                       BoxShadow(
+                        offset: Offset(0, -1),
                         color: Color(0xFF131313),
                         blurRadius: 40,
                         spreadRadius: 0,
@@ -115,7 +121,8 @@ class _CustomFormFieldState extends State<CustomFormField> {
                           focusNode: _focusNode,
                           style: GoogleFonts.roboto(
                             fontSize: 14,
-                            color: _isFocused ? Color(0xFF87858F) : Colors.white,
+                            color:
+                                _isFocused ? Color(0xFF87858F) : Colors.white,
                             fontWeight: FontWeight.w400,
                           ),
                           decoration: InputDecoration(

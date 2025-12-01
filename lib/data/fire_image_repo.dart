@@ -5,7 +5,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FireImageRepo {
   final FirebaseFirestore db;
   final int chunkSize = 120 * 1024;
-
   FireImageRepo(this.db);
 
   Future<Map<String, Uint8List>> downloadData(String imageId) async {

@@ -4,6 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:simple_paint/bloc/account_data_bloc.dart';
 import 'package:simple_paint/bloc/account_data_event.dart';
 import 'package:simple_paint/bloc/account_data_state.dart';
+import 'package:simple_paint/bloc/background_loader_cubit.dart';
+import 'package:simple_paint/bloc/background_loader_state.dart';
+import 'package:simple_paint/ui/widgets/background.dart';
 import 'package:simple_paint/ui/widgets/custom_button.dart';
 import 'package:simple_paint/ui/widgets/custom_form_field.dart';
 import 'package:simple_paint/ui/widgets/press_start_2p_title.dart';
@@ -20,6 +23,11 @@ class AuthPage extends StatefulWidget {
 class _AuthPageState extends State<AuthPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -47,76 +55,82 @@ class _AuthPageState extends State<AuthPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Container(
-          decoration: const BoxDecoration(
-            image: DecorationImage(
-              image: AssetImage('assets/background.png'),
-              fit: BoxFit.cover,
-            ),
-          ),
-          child: BlocListener<AccountDataBloc, AccountDataState>(
-            listener: (context, state) {
-              if (state is AccountDataError) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text(state.message)));
-              } else if (state is AccountDataAuthenticated) {
-                context.go('/gallery');
-              }
-            },
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: CenteredFormView(
-                body: Column(
-                  spacing: 20,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    PressStart2PTitle(text: 'Вход'),
-                    CustomFormField(
-                      label: 'e-mail',
-                      keyboardType: TextInputType.emailAddress,
-                      hintText: 'Введите электронную почту',
-                      controller: _emailController,
+      body: BlocBuilder<BackgroundLoaderCubit, BackgroundLoaderState>(
+        builder: (context, state) {
+          if (state is LoadedBackgroundState) {
+            return GestureDetector(
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: BackgroundWidget(
+                image: state.image,
+                child: BlocListener<AccountDataBloc, AccountDataState>(
+                  listener: (context, state) {
+                    if (state is AccountDataError) {
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(state.message)));
+                    } else if (state is AccountDataAuthenticated) {
+                      context.go('/gallery');
+                    }
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: CenteredFormView(
+                      body: Column(
+                        spacing: 20,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          PressStart2PTitle(text: 'Вход'),
+                          CustomFormField(
+                            label: 'e-mail',
+                            keyboardType: TextInputType.emailAddress,
+                            hintText: 'Введите электронную почту',
+                            controller: _emailController,
+                          ),
+                          //SizedBox(height: 20),
+                          CustomFormField(
+                            label: 'Подтверждение пароля',
+                            hintText: 'Введите пароль',
+                            keyboardType: TextInputType.text,
+                            controller: _passwordController,
+                            obscureText: true,
+                          ),
+                        ],
+                      ),
+                      actions: [
+                        BlocBuilder<AccountDataBloc, AccountDataState>(
+                          builder: (context, state) {
+                            return CustomButton(
+                              title:
+                                  state is AccountDataLoading
+                                      ? 'Загрузка...'
+                                      : 'Войти',
+                              onPressed:
+                                  state is AccountDataLoading ? null : _login,
+                              isDark: true,
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 20),
+                        CustomButton(
+                          title: 'Регистрация',
+                          onPressed: () {
+                            context.go('/auth/registration');
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                     ),
-                    //SizedBox(height: 20),
-                    CustomFormField(
-                      label: 'Подтверждение пароля',
-                      hintText: 'Введите пароль',
-                      keyboardType: TextInputType.text,
-                      controller: _passwordController,
-                      obscureText: true,
-                    ),
-                  ],
+                  ),
                 ),
-                actions: [
-                  BlocBuilder<AccountDataBloc, AccountDataState>(
-                    builder: (context, state) {
-                      return CustomButton(
-                        title:
-                            state is AccountDataLoading
-                                ? 'Загрузка...'
-                                : 'Войти',
-                        onPressed: state is AccountDataLoading ? null : _login,
-                        isDark: true,
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 20),
-                  CustomButton(
-                    title: 'Регистрация',
-                    onPressed: () {
-                      context.go('/auth/registration');
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                ],
               ),
-            ),
-          ),
-        ),
+            );
+          }
+          if (state is ErrorBackgroundState) {
+            return Center(child: Text(state.message));
+          }
+          return Center(child: Column(children: [CircularProgressIndicator()]));
+        },
       ),
     );
   }

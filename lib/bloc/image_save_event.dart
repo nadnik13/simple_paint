@@ -4,7 +4,14 @@ import 'package:equatable/equatable.dart';
 
 import '../data/drawn_line.dart';
 
-class ImageSaveEvent extends Equatable {
+abstract class ImageEvent extends Equatable {
+  const ImageEvent();
+
+  @override
+  List<Object?> get props => [];
+}
+
+class ImageSaveEvent extends ImageEvent {
   final String? imageId;
   final ui.Image image;
   final ui.Image? background;
@@ -18,8 +25,5 @@ class ImageSaveEvent extends Equatable {
   });
 
   @override
-  List<Object> get props {
-    final bg = background;
-    return bg != null ? [image, bg, lines, lines] : [image, lines, lines];
-  }
+  List<Object?> get props => [image, background, lines, lines];
 }

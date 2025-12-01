@@ -66,6 +66,8 @@ class _InternetConnectionIndicatorState
         return true;
       },
       child: BlocBuilder<InternetConnectionCubit, ConnectionStatus>(
+        //TODO1 надо использовать buildWhen
+        //buildWhen: ,
         builder: (context, state) {
           if (!_isVisible) {
             return const SizedBox.shrink();

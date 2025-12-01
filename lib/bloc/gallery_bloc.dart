@@ -4,15 +4,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:simple_paint/data/user_repo.dart';
 
 import '../data/gallery_repo.dart';
-import '../data/preview_item.dart';
 import 'gallery_event.dart';
 import 'gallery_state.dart';
 
 class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
   final GalleryRepo _galleryRepo;
   final UserRepo _userRepo;
-
-  StreamSubscription<List<ImageInfoItem>>? _imagesSubscription;
 
   GalleryBloc({required GalleryRepo galleryRepo, required UserRepo userRepo})
     : _galleryRepo = galleryRepo,
@@ -24,11 +21,7 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
   }
 
   Future<void> _loadImages() async {
-    await _imagesSubscription?.cancel();
-    _imagesSubscription = null;
-
     final images = await _galleryRepo.getPreviews(_userRepo.userId);
-
     if (images.isEmpty) {
       emit(GalleryIsEmpty(userId: _userRepo.userId));
     } else {
@@ -78,9 +71,6 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
     }
 
     try {
-      await _imagesSubscription?.cancel();
-      _imagesSubscription = null;
-
       await _loadImages();
       event.completer?.complete();
     } catch (e) {
@@ -91,16 +81,8 @@ class GalleryBloc extends Bloc<GalleryEvent, GalleryState> {
   }
 
   void _onClearImages(ClearGalleryEvent event, Emitter<GalleryState> emit) {
-    _imagesSubscription?.cancel();
-    _imagesSubscription = null;
     if (!emit.isDone) {
       emit(GalleryInitialState());
     }
-  }
-
-  @override
-  Future<void> close() {
-    _imagesSubscription?.cancel();
-    return super.close();
   }
 }

@@ -17,18 +17,22 @@ class CenteredFormView extends StatefulWidget {
 class _CentredFormViewState extends State<CenteredFormView> {
   final _buttonColumnKey = GlobalKey();
   double _inputBottomPadding = 0;
+  MediaQueryData? _subscribtion;
+
+  @override
+  void initState() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {});
+    super.initState();
+  }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final isKeyboardOpened = MediaQuery.of(context).viewPadding.bottom == 0;
-    if (isKeyboardOpened) {
-      final ro = _buttonColumnKey.currentContext?.findRenderObject();
-      if (ro is RenderBox && ro.hasSize) {
-        _inputBottomPadding = ro.size.height + 8;
-      }
-    } else {
-      _inputBottomPadding = 0;
+    _subscribtion = MediaQuery.of(context);
+
+    final ro = _buttonColumnKey.currentContext?.findRenderObject();
+    if (ro is RenderBox && ro.hasSize) {
+      _inputBottomPadding = ro.size.height + 8;
     }
   }
 
@@ -42,7 +46,9 @@ class _CentredFormViewState extends State<CenteredFormView> {
             SliverFillRemaining(
               hasScrollBody: false,
               child: Padding(
-                padding: EdgeInsets.only(bottom: _inputBottomPadding + 8),
+                padding: EdgeInsets.symmetric(
+                  vertical: _inputBottomPadding + 8,
+                ),
                 child: widget.body,
               ),
             ),
@@ -59,5 +65,10 @@ class _CentredFormViewState extends State<CenteredFormView> {
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }

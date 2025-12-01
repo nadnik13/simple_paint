@@ -19,7 +19,4 @@ class UpdateLineEvent extends LineEvent {
 
 class ClearLineEvent extends LineEvent {
   const ClearLineEvent();
-
-  @override
-  List<Object> get props => [];
 }

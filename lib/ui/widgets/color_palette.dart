@@ -84,11 +84,7 @@ class ColorPalette extends StatelessWidget {
           child: AnimatedOpacity(
             duration: const Duration(milliseconds: 210),
             opacity: isCurrentColor ? 1 : 0,
-            child: Icon(
-              Icons.done,
-              size: 20,
-              color: useWhiteForeground(color) ? Colors.white : Colors.black,
-            ),
+            child: Icon(Icons.done, size: 20, color: Colors.white),
           ),
         ),
       ),

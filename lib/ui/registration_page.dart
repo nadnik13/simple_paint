@@ -125,7 +125,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
+        onTap: FocusScope.of(context).unfocus,
         child: Container(
           decoration: const BoxDecoration(
             image: DecorationImage(

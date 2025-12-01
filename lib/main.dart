@@ -13,6 +13,8 @@ import 'package:simple_paint/ui/gallery_page.dart';
 import 'package:simple_paint/ui/registration_page.dart';
 import 'package:simple_paint/utils/notification_helper.dart';
 
+import 'bloc/account_data_event.dart';
+import 'bloc/background_loader_cubit.dart';
 import 'bloc/canvas_bloc.dart';
 import 'bloc/gallery_bloc.dart';
 import 'bloc/image_bloc.dart';
@@ -25,9 +27,7 @@ import 'ui/widgets/internet_connection_indicator.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
   runApp(MyApp());
 }
 
@@ -110,22 +110,31 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
+  late final AccountDataBloc _accountDataBloc;
   @override
   void initState() {
     super.initState();
+    _accountDataBloc = AccountDataBloc(firebaseAuth: FirebaseAuth.instance)
+      ..add(CheckAuthStatusEvent());
     NotificationHelper.init();
+  }
+
+  @override
+  void dispose() {
+    _accountDataBloc.close();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<AccountDataBloc>(
-          create:
-              (context) => AccountDataBloc(firebaseAuth: FirebaseAuth.instance),
-        ),
+        BlocProvider<AccountDataBloc>.value(value: _accountDataBloc),
         BlocProvider<InternetConnectionCubit>(
           create: (context) => InternetConnectionCubit(),
+        ),
+        BlocProvider<BackgroundLoaderCubit>(
+          create: (context) => BackgroundLoaderCubit('assets/background1.png'),
         ),
       ],
       child: Directionality(
